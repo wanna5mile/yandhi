@@ -1,17 +1,13 @@
-// src/engine/engine.js
 import * as BABYLON from "https://cdn.babylonjs.com/babylon.js";
 
 /**
  * Initializes Babylon engine, scene, and spinning disc plane
  * @param {HTMLCanvasElement} canvas - Canvas element
  * @param {MusicPlayer} player - Your music player instance
- * @returns {Object} - { engine, scene, discPlane, camera }
+ * @returns {Object} - { engine, scene, discPlane, camera, setDiscTexture }
  */
 export function initializeEngine(canvas, player) {
-  // Create Babylon engine
   const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-
-  // Create scene
   const scene = new BABYLON.Scene(engine);
 
   // Camera
@@ -28,24 +24,21 @@ export function initializeEngine(canvas, player) {
   // Light
   const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-  // Create a plane for the disc
+  // Disc plane
   const discPlane = BABYLON.MeshBuilder.CreatePlane("discPlane", { size: 3 }, scene);
-  discPlane.position = new BABYLON.Vector3(0, 0, 0);
-  discPlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL; // always face camera
+  discPlane.position.set(0, 0, 0);
+  discPlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
 
-  // Material with double-sided disc texture
   const mat = new BABYLON.StandardMaterial("discMat", scene);
   mat.diffuseTexture = new BABYLON.Texture("assets/textures/disc.png", scene);
-  mat.backFaceCulling = false; // double-sided
+  mat.backFaceCulling = false;
   mat.diffuseTexture.hasAlpha = true;
-
   discPlane.material = mat;
 
-  // Spin plane only when music is playing
+  // Spin control
   let spinning = false;
-
-  player.onPlay(() => { spinning = true; });
-  player.onPause(() => { spinning = false; });
+  player.onPlay(() => spinning = true);
+  player.onPause(() => spinning = false);
 
   scene.onBeforeRenderObservable.add(() => {
     if (spinning) {
@@ -54,14 +47,17 @@ export function initializeEngine(canvas, player) {
     }
   });
 
-  // Run render loop
-  engine.runRenderLoop(() => {
-    scene.render();
-  });
-
-  // Handle window resize
+  engine.runRenderLoop(() => scene.render());
   window.addEventListener("resize", () => engine.resize());
 
-  // Return objects for further control
-  return { engine, scene, discPlane, camera };
+  // Utility to change disc texture dynamically
+  function setDiscTexture(url) {
+    if (url) {
+      mat.diffuseTexture.dispose();
+      mat.diffuseTexture = new BABYLON.Texture(url, scene);
+      mat.diffuseTexture.hasAlpha = true;
+    }
+  }
+
+  return { engine, scene, discPlane, camera, setDiscTexture };
 }
