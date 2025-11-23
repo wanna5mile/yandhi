@@ -24,12 +24,17 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const player = new MusicPlayer(playlist);
 
+  const canvas = document.getElementById("renderCanvas");
+
+  // Initialize Babylon engine & disc cube, pass the music player
+  const { engine, scene, discCube } = initializeEngine(canvas, player);
+
+  // Get control buttons
   const playBtn = document.getElementById("playBtn");
   const nextBtn = document.getElementById("nextBtn");
   const prevBtn = document.getElementById("prevBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
   const repeatBtn = document.getElementById("repeatBtn");
-
   const playIcon = playBtn.querySelector("i");
 
   // ▶️ Play / Pause
