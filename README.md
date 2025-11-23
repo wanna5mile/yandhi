@@ -1,2 +1,1 @@
-# yandhi
-3d music player
+![alt text](placeholder.png)
