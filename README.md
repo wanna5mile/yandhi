@@ -1,1 +1,2 @@
-![alt text](placeholder.png)
+![cover](yandhicoverart.png)
+![placeholder](placeholder.png)
