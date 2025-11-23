@@ -193,7 +193,7 @@ eighty.material = eightyMat;
 
 const insert = BABYLON.MeshBuilder.CreateBox("insert", {
   width: 0.5,
-  height:1.2,
+  height: 1.2,
   depth: 0.05
 }, scene);
 
@@ -204,6 +204,11 @@ insert.position.z = -0.2;
 // Create material
 const insertMat = new BABYLON.StandardMaterial("insertMat", scene);
 insertMat.diffuseTexture = new BABYLON.Texture("insert.png", scene);
+
+// Rotate the texture 90 degrees clockwise
+insertMat.diffuseTexture.uRotationCenter = 0.5;
+insertMat.diffuseTexture.vRotationCenter = 0.5;
+insertMat.diffuseTexture.wAng = Math.PI / 2; // 90 degrees in radians
 
 // Apply material to mesh
 insert.material = insertMat;
