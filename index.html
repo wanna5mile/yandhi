@@ -66,6 +66,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const waitForBabylon = setInterval(() => {
     if (!window.BABYLON) return;
     clearInterval(waitForBabylon);
+    
+    // ✅ GLOBAL TEXTURE ORIENTATION FIX
+    BABYLON.Texture.FlipY = false;
 
     // ================= AUDIO SETUP =================
     const canvas = document.getElementById("renderCanvas");
