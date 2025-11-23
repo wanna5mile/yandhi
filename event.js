@@ -1,4 +1,4 @@
-// main.js — Single-file simplified 3D Music Player
+// main.js — Single-file simplified 3D Music Player (UPDATED)
 
 // ===== BASIC SETUP =====
 const canvas = document.getElementById("renderCanvas");
@@ -47,7 +47,9 @@ prevBtn.onclick = () => {
 // ===== BABYLON ENGINE =====
 const engine = new BABYLON.Engine(canvas, true);
 const scene = new BABYLON.Scene(engine);
-scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
+
+// ✅ White background
+scene.clearColor = new BABYLON.Color4(1, 1, 1, 1);
 
 // Camera
 const camera = new BABYLON.ArcRotateCamera(
@@ -63,15 +65,23 @@ camera.attachControl(canvas, true);
 // Light
 new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-// ===== DISC (3D with hole) =====
+// ===== DISC (3D with hole, STANDING) =====
 const disc = BABYLON.MeshBuilder.CreateTorus("disc", {
   diameter: 3,
   thickness: 0.08,
   tessellation: 64
 }, scene);
 
+// ✅ Make disc stand upright
+// Torus defaults horizontal, rotate to vertical
+disc.rotation.x = Math.PI / 2;
+
 const discMat = new BABYLON.PBRMaterial("discMat", scene);
-discMat.albedoTexture = new BABYLON.Texture("assets/textures/disc.png", scene);
+
+// ✅ Texture used on BOTH sides
+discMat.albedoTexture = new BABYLON.Texture("src/assets/textures/disc.png", scene);
+discMat.backFaceCulling = false;
+
 discMat.metallic = 0.6;
 discMat.roughness = 0.3;
 disc.material = discMat;
@@ -90,7 +100,7 @@ glassMat.roughness = 0.05;
 caseBox.material = glassMat;
 caseBox.position.z = -0.2;
 
-// ===== AUDIO REACTIVE SPIN =====
+// ===== AUDIO REACTIVE SPIN (IN PLACE) =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const analyser = audioCtx.createAnalyser();
 const src = audioCtx.createMediaElementSource(audio);
@@ -103,7 +113,9 @@ function render() {
   if (isPlaying) {
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
-    disc.rotation.y += 0.01 + avg * 0.0003;
+
+    // ✅ Spins in place like a real upright CD
+    disc.rotation.z += 0.01 + avg * 0.0003;
   }
 
   scene.render();
