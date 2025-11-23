@@ -1,4 +1,5 @@
 import { MusicPlayer } from "./audio/player.js";
+import { initializeEngine } from "./engine/engine.js";
 
 window.addEventListener("DOMContentLoaded", () => {
 
