@@ -118,6 +118,22 @@ discMat.clearCoat.intensity = 0.8;
 disc.material = discMat;
 
 // ===== TRANSPARENT CASE =====
+
+// Light purple side tape block
+const tape = BABYLON.MeshBuilder.CreateBox("tape", {
+  width: 0.4,
+  height: 4 / 3,
+  depth: 0.52
+}, scene);
+
+tape.position.x = 2.2; // Right side of case
+tape.position.y = 0;
+tape.position.z = -0.2;
+
+const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
+tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9); // light purple
+tape.material = tapeMat;
+
 const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
   width: 4,
   height: 4,
@@ -131,7 +147,7 @@ glassMat.roughness = 0.05;
 caseBox.material = glassMat;
 caseBox.position.z = -0.2;
 
-// ===== AUDIO REACTIVE SPIN (IN PLACE) =====
+// ===== AUDIO REACTIVE SPIN (PURE CIRCULAR ROTATION) =====
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const analyser = audioCtx.createAnalyser();
 const src = audioCtx.createMediaElementSource(audio);
@@ -145,11 +161,11 @@ function render() {
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
 
-    // ✅ Spins in place like a real upright CD
-    disc.rotation.z += 0.01 + avg * 0.0003;
+    // ✅ True CD-style spin around its own axis (no wobble / no spherical motion)
+    disc.rotate(BABYLON.Axis.Y, 0.01 + avg * 0.0003, BABYLON.Space.LOCAL);
   }
 
-  scene.render();
+  scene.render();();
 }
 
 engine.runRenderLoop(render);
