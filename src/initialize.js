@@ -1,7 +1,7 @@
 import { MusicPlayer } from "./audio/player.js";
 
 const playlist = [
-  "./assets/music/bye-bye-baby.mp3"
+  "./assets/music/byebyebaby.mp3"
 //  "./assets/music/the-chakra.mp3",
 //  "./assets/music/alien.mp3",
 //  "./assets/music/new-body.mp3",
