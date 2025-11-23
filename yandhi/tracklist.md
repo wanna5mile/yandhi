@@ -15,3 +15,5 @@
 14. Last Name  [E]
 15. Spread Your Wings [E]
 16. End Of It. [E]
+### Kanye West 16 Tracks • 55m 21s - August 2018 (November 23rd 2018)
+![alt text](releasetweet.png)
