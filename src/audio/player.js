@@ -1,3 +1,4 @@
+// src/audio/player.js
 export class MusicPlayer {
   constructor(playlist) {
     this.audio = document.getElementById("audio");
@@ -9,20 +10,33 @@ export class MusicPlayer {
     this.repeat = false;
 
     this.loadTrack(this.currentIndex);
+
+    // Event callbacks
+    this._onPlayCallbacks = [];
+    this._onPauseCallbacks = [];
+    this._onTrackEndCallbacks = [];
+    
+    this.audio.addEventListener("ended", () => {
+      this._onTrackEndCallbacks.forEach(cb => cb());
+    });
   }
 
   loadTrack(index) {
+    this.currentIndex = index;
     this.audio.src = this.playlist[index];
+    this.audio.load();
   }
 
   play() {
-    this.audio.play();
+    this.audio.play().catch(e => console.warn("Play failed:", e));
     this.isPlaying = true;
+    this._onPlayCallbacks.forEach(cb => cb());
   }
 
   pause() {
     this.audio.pause();
     this.isPlaying = false;
+    this._onPauseCallbacks.forEach(cb => cb());
   }
 
   togglePlay() {
@@ -53,4 +67,9 @@ export class MusicPlayer {
     this.repeat = !this.repeat;
     this.audio.loop = this.repeat;
   }
+
+  // Event registration
+  onPlay(cb) { this._onPlayCallbacks.push(cb); }
+  onPause(cb) { this._onPauseCallbacks.push(cb); }
+  onTrackEnd(cb) { this._onTrackEndCallbacks.push(cb); }
 }
