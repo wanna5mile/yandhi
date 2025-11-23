@@ -62,28 +62,59 @@ const camera = new BABYLON.ArcRotateCamera(
 );
 camera.attachControl(canvas, true);
 
-// Light
-new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+// ===== PROPER STUDIO LIGHTING SETUP =====
 
-// ===== DISC (3D with hole, STANDING) =====
-const disc = BABYLON.MeshBuilder.CreateTorus("disc", {
+// Soft ambient fill
+const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+hemiLight.intensity = 0.4;
+
+// Main directional light (key light)
+const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.5, -1, -0.5), scene);
+dirLight.position = new BABYLON.Vector3(5, 8, 5);
+dirLight.intensity = 1.2;
+
+// Subtle rim light for disc edge glow
+const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 2, -3), scene);
+pointLight.intensity = 0.6;
+
+// ===== DISC (REAL CD SHAPE WITH CENTER HOLE, STANDING) =====
+
+// Create solid disc body
+const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
+  height: 0.05,
   diameter: 3,
-  thickness: 0.08,
+  tessellation: 96
+}, scene);
+
+// Create center hole cutter
+const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
+  height: 0.06,
+  diameter: 0.4,
   tessellation: 64
 }, scene);
 
-// ✅ Make disc stand upright
-// Torus defaults horizontal, rotate to vertical
+// Subtract hole from disc body using CSG
+const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
+const disc = discCSG.toMesh("disc", null, scene);
+
+discBody.dispose();
+hole.dispose();
+
+// Make disc stand upright
+// Cylinder is horizontal by default, rotate it vertically
 disc.rotation.x = Math.PI / 2;
 
 const discMat = new BABYLON.PBRMaterial("discMat", scene);
 
-// ✅ Texture used on BOTH sides
+// Texture on both sides
 discMat.albedoTexture = new BABYLON.Texture("src/assets/textures/disc.png", scene);
 discMat.backFaceCulling = false;
 
-discMat.metallic = 0.6;
-discMat.roughness = 0.3;
+discMat.metallic = 0.4;
+discMat.roughness = 0.25;
+discMat.clearCoat.isEnabled = true;
+discMat.clearCoat.intensity = 0.8;
+
 disc.material = discMat;
 
 // ===== TRANSPARENT CASE =====
