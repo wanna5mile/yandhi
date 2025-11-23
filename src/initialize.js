@@ -1,7 +1,9 @@
 import { MusicPlayer } from "./audio/player.js";
 
-const playlist = [
-  "./assets/music/byebyebaby.mp3"
+window.addEventListener("DOMContentLoaded", () => {
+
+  const playlist = [
+    "./assets/music/byebyebaby.mp3"
 //  "./assets/music/the-chakra.mp3",
 //  "./assets/music/alien.mp3",
 //  "./assets/music/new-body.mp3",
@@ -17,26 +19,58 @@ const playlist = [
 //  "./assets/music/last-name.mp3",
 //  "./assets/music/spread-your-wings.mp3",
 //  "./assets/music/end-of-it.mp3"
-];
+  ];
 
-const player = new MusicPlayer(playlist);
+  const player = new MusicPlayer(playlist);
 
-document.getElementById("playBtn").addEventListener("click", () => {
-  player.togglePlay();
-});
+  const playBtn = document.getElementById("playBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const prevBtn = document.getElementById("prevBtn");
+  const shuffleBtn = document.getElementById("shuffleBtn");
+  const repeatBtn = document.getElementById("repeatBtn");
 
-document.getElementById("nextBtn").addEventListener("click", () => {
-  player.next();
-});
+  const playIcon = playBtn.querySelector("i");
 
-document.getElementById("prevBtn").addEventListener("click", () => {
-  player.previous();
-});
+  // ▶️ Play / Pause
+  playBtn.addEventListener("click", () => {
+    player.togglePlay();
 
-document.getElementById("shuffleBtn").addEventListener("click", () => {
-  player.toggleShuffle();
-});
+    if (player.isPlaying) {
+      playIcon.classList.remove("fa-play-circle");
+      playIcon.classList.add("fa-pause-circle");
+    } else {
+      playIcon.classList.remove("fa-pause-circle");
+      playIcon.classList.add("fa-play-circle");
+    }
+  });
 
-document.getElementById("repeatBtn").addEventListener("click", () => {
-  player.toggleRepeat();
+  // ⏭ Next
+  nextBtn.addEventListener("click", () => {
+    player.next();
+  });
+
+  // ⏮ Previous
+  prevBtn.addEventListener("click", () => {
+    player.previous();
+  });
+
+  // 🔀 Shuffle
+  shuffleBtn.addEventListener("click", () => {
+    player.toggleShuffle();
+    shuffleBtn.classList.toggle("active", player.shuffle);
+  });
+
+  // 🔁 Repeat
+  repeatBtn.addEventListener("click", () => {
+    player.toggleRepeat();
+    repeatBtn.classList.toggle("active", player.repeat);
+  });
+
+  // ▶ Auto play next when track ends (if repeat off)
+  player.audio.addEventListener("ended", () => {
+    if (!player.repeat) {
+      player.next();
+    }
+  });
+
 });
