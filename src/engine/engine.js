@@ -2,10 +2,10 @@
 import * as BABYLON from "https://cdn.babylonjs.com/babylon.js";
 
 /**
- * Initializes Babylon engine, scene, and spinning disc cube
+ * Initializes Babylon engine, scene, and spinning disc plane
  * @param {HTMLCanvasElement} canvas - Canvas element
  * @param {MusicPlayer} player - Your music player instance
- * @returns {Object} - { engine, scene, discCube }
+ * @returns {Object} - { engine, scene, discPlane, camera }
  */
 export function initializeEngine(canvas, player) {
   // Create Babylon engine
@@ -14,26 +14,34 @@ export function initializeEngine(canvas, player) {
   // Create scene
   const scene = new BABYLON.Scene(engine);
 
-  // Optional: simple camera and light
-  const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 7, BABYLON.Vector3.Zero(), scene);
+  // Camera
+  const camera = new BABYLON.ArcRotateCamera(
+    "camera",
+    Math.PI / 2,
+    Math.PI / 2.5,
+    7,
+    BABYLON.Vector3.Zero(),
+    scene
+  );
   camera.attachControl(canvas, true);
 
+  // Light
   const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-  // Create the spinning disc cube
-  const discCube = BABYLON.MeshBuilder.CreateBox("discCube", { size: 2 }, scene);
-  discCube.position = new BABYLON.Vector3(0, 0, 0); // center of scene
+  // Create a plane for the disc
+  const discPlane = BABYLON.MeshBuilder.CreatePlane("discPlane", { size: 3 }, scene);
+  discPlane.position = new BABYLON.Vector3(0, 0, 0);
+  discPlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL; // always face camera
 
-  // Transparent material with double-sided disc
+  // Material with double-sided disc texture
   const mat = new BABYLON.StandardMaterial("discMat", scene);
   mat.diffuseTexture = new BABYLON.Texture("assets/textures/disc.png", scene);
-  mat.backFaceCulling = false;   // double-sided
-  mat.alpha = 0;                 // cube itself invisible
+  mat.backFaceCulling = false; // double-sided
   mat.diffuseTexture.hasAlpha = true;
 
-  discCube.material = mat;
+  discPlane.material = mat;
 
-  // Spin cube only when music is playing
+  // Spin plane only when music is playing
   let spinning = false;
 
   player.onPlay(() => { spinning = true; });
@@ -41,21 +49,19 @@ export function initializeEngine(canvas, player) {
 
   scene.onBeforeRenderObservable.add(() => {
     if (spinning) {
-      discCube.rotation.x += 0.02;
-      discCube.rotation.z += 0.015;
+      discPlane.rotation.x += 0.02;
+      discPlane.rotation.z += 0.015;
     }
   });
 
-  // Run the render loop
+  // Run render loop
   engine.runRenderLoop(() => {
     scene.render();
   });
 
   // Handle window resize
-  window.addEventListener("resize", () => {
-    engine.resize();
-  });
+  window.addEventListener("resize", () => engine.resize());
 
-  // Return objects if needed for further control
-  return { engine, scene, discCube, camera };
+  // Return objects for further control
+  return { engine, scene, discPlane, camera };
 }
