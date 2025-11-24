@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoLive | Upgraded IDE</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --panel: #1c1c22;
+      --text: #e8e8f0;
+      --accent: #00ff7f;
+      --terminal-bg: #000;
+      --terminal-text: #00ff7f;
+      --error-text: #ff5555;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr 200px;
+      grid-template-areas: "header" "main" "terminal";
+      background: var(--bg);
+      color: var(--text);
+      font-family: Consolas, monospace;
+    }
+
+    header {
+      grid-area: header;
+      padding: 10px 20px;
+      background: var(--panel);
+      border-bottom: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #main {
+      grid-area: main;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* EDITOR PANEL */
+    #editor {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+      overflow: hidden;
+      min-width: 220px;
+      resize: horizontal;
+    }
+
+    .section {
+      border-bottom: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #15151b;
+      padding: 6px 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .section-header button {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+
+    .section textarea {
+      background: #111;
+      color: var(--text);
+      border: none;
+      resize: vertical;
+      min-height: 80px;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .section.collapsed textarea {
+      display: none;
+    }
+
+    /* OUTPUT */
+    #output {
+      flex: 1;
+      background: white;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    #terminal {
+      grid-area: terminal;
+      background: var(--terminal-bg);
+      color: var(--terminal-text);
+      padding: 10px;
+      font-size: 14px;
+      overflow-y: auto;
+      border-top: 2px solid var(--accent);
+    }
+
+    button.main-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .log { color: var(--terminal-text); }
+    .warn { color: #ffaa00; }
+    .error { color: var(--error-text); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>LoLive IDE</h1>
+  <div>
+    <button class="main-btn" id="runBtn">▶ Run</button>
+    <button class="main-btn" id="newTabBtn">🗔 Open in Tab</button>
+  </div>
+</header>
+
+<div id="main">
+
+  <div id="editor">
+
+    <div class="section" data-type="html">
+      <div class="section-header">
+        HTML
+        <button>Hide</button>
+      </div>
+      <textarea id="html"><h1>Hello World!</h1></textarea>
+    </div>
+
+    <div class="section" data-type="css">
+      <div class="section-header">
+        CSS
+        <button>Hide</button>
+      </div>
+      <textarea id="css">body { text-align:center; color:limegreen; }</textarea>
+    </div>
+
+    <div class="section" data-type="js">
+      <div class="section-header">
+        JavaScript
+        <button>Hide</button>
+      </div>
+      <textarea id="js">console.log("It works!");</textarea>
+    </div>
+
+  </div>
+
+  <div id="output">
+    <iframe id="preview"></iframe>
+  </div>
+
+</div>
+
+<div id="terminal"><strong>&gt; Terminal Output:</strong><br /></div>
+
+<script>
+const html = document.getElementById('html');
+const css = document.getElementById('css');
+const js = document.getElementById('js');
+const preview = document.getElementById('preview');
+const terminal = document.getElementById('terminal');
+
+const keys = { html: 'lolive_html', css: 'lolive_css', js: 'lolive_js' };
+
+// Collapsible logic
+
+document.querySelectorAll('.section-header').forEach(header => {
+  const btn = header.querySelector('button');
+  const section = header.parentElement;
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    section.classList.toggle('collapsed');
+    btn.textContent = section.classList.contains('collapsed') ? 'Show' : 'Hide';
+  });
+});
+
+// Load saved code
+window.addEventListener('DOMContentLoaded', () => {
+  html.value = localStorage.getItem(keys.html) || html.value;
+  css.value = localStorage.getItem(keys.css) || css.value;
+  js.value = localStorage.getItem(keys.js) || js.value;
+  runCode();
+});
+
+[html, css, js].forEach(area => {
+  area.addEventListener('input', () => {
+    localStorage.setItem(keys[area.id], area.value);
+    runCode();
+  });
+});
+
+function log(type, msg) {
+  const el = document.createElement('div');
+  el.className = type;
+  el.textContent = msg;
+  terminal.appendChild(el);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function runCode() {
+  terminal.innerHTML = '<strong>&gt; Terminal Output:</strong><br />';
+  const combined = `
+    <style>${css.value}</style>
+    ${html.value}
+    <script>
+      console.log = (...args)=>parent.postMessage({type:'log', msg:args.join(' ')}, '*');
+      console.warn = (...args)=>parent.postMessage({type:'warn', msg:args.join(' ')}, '*');
+      console.error = (...args)=>parent.postMessage({type:'error', msg:args.join(' ')}, '*');
+      try { ${js.value} } catch(err){ console.error(err); }
+    <\/script>
+  `;
+  preview.srcdoc = combined;
+}
+
+window.addEventListener('message', e => {
+  if (!e.data || !e.data.type) return;
+  log(e.data.type, e.data.msg);
+});
+
+document.getElementById('runBtn').onclick = runCode;
+
+document.getElementById('newTabBtn').onclick = () => {
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <style>${css.value}</style>
+    ${html.value}
+    <script>try { ${js.value} } catch(e){ console.error(e); }<\\/script>
+  `);
+};
+</script>
+
+</body>
+</html>
