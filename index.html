@@ -158,7 +158,9 @@ function makeStandardTextureMaterial(name, url, scene, opts = {}) {
   return mat;
 }
 
-// ================= CASE + TAPE (WAS MISSING - CAUSED CRASH) =================
+// ================= CASE + TAPE =================
+
+// ----- TAPE (unchanged) -----
 const tape = BABYLON.MeshBuilder.CreateBox("tape", {
   width: 1.4,
   height: 4 / 3,
@@ -168,10 +170,21 @@ const tape = BABYLON.MeshBuilder.CreateBox("tape", {
 tape.position.x = -1.4;
 tape.position.z = -0.2;
 
-const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
-  width: 4,
-  height: 4,
-  depth: 0.15
+
+// ----- CASE (20% rounded) -----
+const caseWidth = 4;
+const caseHeight = 4;
+const caseDepth = 0.15;
+
+// 20% rounding based on smallest dimension
+const roundRadius = Math.min(caseWidth, caseHeight, caseDepth) * 0.2;
+
+const caseBox = BABYLON.MeshBuilder.CreateRoundedBox("case", {
+  width: caseWidth,
+  height: caseHeight,
+  depth: caseDepth,
+  radius: roundRadius,
+  subdivisions: 6   // smoothness of rounding
 }, scene);
 
 // Glass material for case
@@ -179,11 +192,14 @@ const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
 glassMat.alpha = 0.25;
 glassMat.indexOfRefraction = 1.5;
 glassMat.roughness = 0.05;
+
 caseBox.material = glassMat;
 caseBox.position.z = -0.2;
 
+
+// ----- TAPE MATERIAL -----
 const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
-tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9); // if you want colored tape
+tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
 tapeMat.backFaceCulling = true;
 tape.material = tapeMat;
 
