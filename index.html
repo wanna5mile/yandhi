@@ -83,8 +83,6 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!window.BABYLON) return;
     clearInterval(waitForBabylon);
     
-    // ✅ GLOBAL TEXTURE ORIENTATION FIX
-    BABYLON.Texture.FlipY = false;
 
     // ================= AUDIO SETUP =================
     const canvas = document.getElementById("renderCanvas");
@@ -110,7 +108,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // ================= BABYLON ENGINE =================
     const engine = new BABYLON.Engine(canvas, true);
     const scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color4(1, 1, 1, 1);
+    scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
     const camera = new BABYLON.ArcRotateCamera(
       "camera",
@@ -145,7 +143,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
       height: 0.06,
-      diameter: 0.2, // EDIT THIS TWIN
+      diameter: 0.1, // EDIT THIS TWIN
       tessellation: 64
     }, scene);
 
@@ -173,108 +171,123 @@ window.addEventListener("DOMContentLoaded", () => {
 function makeStandardTextureMaterial(name, url, scene, opts = {}) {
   const mat = new BABYLON.StandardMaterial(name, scene);
 
-  // Make sure the texture loads and uses its alpha channel
   const tex = new BABYLON.Texture(url, scene);
-  tex.hasAlpha = true;                     // important: treat PNG alpha as real alpha
+  tex.hasAlpha = true;
+
   mat.diffuseTexture = tex;
 
-  // Show texture colors without tinting
   mat.diffuseColor = new BABYLON.Color3(1, 1, 1);
-
-  // Use the texture alpha to drive material transparency
   mat.useAlphaFromDiffuseTexture = true;
-
-  // Choose alpha blend mode so partially transparent pixels render smoothly
   mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-
-  // Optional: show both sides of thin planes (useful for flat boxes / quads)
   mat.backFaceCulling = true;
 
-  // If you want lighting to not darken the texture too much, you can tweak:
-  // mat.specularColor = new BABYLON.Color3(0,0,0); // optional: reduce specular shine
-  // mat.emissiveColor = new BABYLON.Color3(1,1,1); // optional: make texture unaffected by lights
+  // Optional lighting tweaks
+  // mat.specularColor = new BABYLON.Color3(0,0,0);
+  // mat.emissiveColor = new BABYLON.Color3(1,1,1);
 
-  // Extra: allow flipping/rotation options via opts (uScale/vScale/wAng/uOffset/vOffset)
+  // ---------------- OVERRIDE CONTROLS ----------------
   if (opts.uScale !== undefined) tex.uScale = opts.uScale;
   if (opts.vScale !== undefined) tex.vScale = opts.vScale;
   if (opts.uOffset !== undefined) tex.uOffset = opts.uOffset;
   if (opts.vOffset !== undefined) tex.vOffset = opts.vOffset;
-  if (opts.wAng !== undefined) { tex.uRotationCenter = 0.5; tex.vRotationCenter = 0.5; tex.wAng = opts.wAng; }
-  if (opts.uScaleMirror) { tex.uScale = -Math.abs(tex.uScale || 1); tex.uOffset = 1; }
+
+  if (opts.wAng !== undefined) {
+    tex.uRotationCenter = 0.5;
+    tex.vRotationCenter = 0.5;
+    tex.wAng = opts.wAng;
+  }
+
+  // Horizontal mirror helper (optional)
+  if (opts.uScaleMirror) {
+    tex.uScale = -Math.abs(tex.uScale || 1);
+    tex.uOffset = 1;
+  }
 
   return mat;
 }
 
-// ---------------- USAGE: replace your material construction with the helper ----------------
 
-// eighty
+
+// ================= EIGHTY =================
 const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
   width: 0.8,
   height: 0.8,
-  depth: 0.05
+  depth: 0.05,
+  faceUV: [
+    new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
+    new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+  ]
 }, scene);
 
-eighty.position.x = -1.5;
-eighty.position.y = 1.5;
-eighty.position.z = -0.2;
+eighty.position.set(-1.5, 1.5, -0.2);
 
+// Apply texture to front and back
 const eightyMat = makeStandardTextureMaterial("eightyMat", "80fix.png", scene);
 eighty.material = eightyMat;
 
-// insert (vertical, not upside down, side-loaded)
+
+// ================= INSERT =================
 const insert = BABYLON.MeshBuilder.CreateBox("insert", {
   width: 0.5,
   height: 1.2,
-  depth: 0.05
+  depth: 0.05,
+faceUV: [
+    new BABYLON.Vector4(1, 0, 0, 1), // front (normal)
+    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+]
 }, scene);
 
-insert.position.x = 1.8;
-insert.position.y = 1.4;
-insert.position.z = -0.2;
+insert.position.set(1.8, 1.4, -0.2);
 
-const insertMat = makeStandardTextureMaterial(
-  "insertMat",
-  "insertfix.png",
-  scene,
-  {
-    wAng: Math.PI / -2,   // rotate -90° clockwise so it's vertical
-    vScale: -1           // fixes upside-down
-  }
-);
-
+// Apply texture to front and back
+const insertMat = makeStandardTextureMaterial("insertMat", "insertfix.png", scene);
 insert.material = insertMat;
 
-// minidisc (correct orientation)
+// ================= MINIDISC =================
+// Ensure this comes AFTER caseBox is created
+const minidiscDepth = 0.02; // thin enough to fit inside the cover
+
 const minidisc = BABYLON.MeshBuilder.CreateBox("minidisc", {
-  width: 0.8,
-  height: 0.8,
-  depth: 0.05
+    width: 0.8,
+    height: 0.8,
+    depth: minidiscDepth,
+    faceUV: [
+        new BABYLON.Vector4(1, 1, 0, 0), // front
+        new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
+        new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+        new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+        new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+        new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+    ]
 }, scene);
 
-minidisc.position.x = 0;
-minidisc.position.y = -1.2;
-minidisc.position.z = -0.1;
-
-const minidiscMat = makeStandardTextureMaterial(
-  "minidiscMat",
-  "minidiscfix.png",
-  scene,
-  {
-    vScale: -1   // ✅ flips vertically to fix upside-down rendering
-  }
+// Position minidisc to sit inside cover
+minidisc.position.set(
+    0,          // x
+    -1.2,       // y
+    -0.2         // same as cover z; adjust slightly if needed
 );
 
+// Apply texture
+const minidiscMat = makeStandardTextureMaterial("minidiscMat", "minidiscfix.png", scene);
 minidisc.material = minidiscMat;
 
-// ================= CASE + TAPE (WAS MISSING - CAUSED CRASH) =================
+// ================= CASE + TAPE =================
 const tape = BABYLON.MeshBuilder.CreateBox("tape", {
   width: 1.4,
   height: 4 / 3,
   depth: 0.2
 }, scene);
 
-tape.position.x = -1.4;
-tape.position.z = -0.2;
+tape.position.set(-1.4, 0, -0.2);
 
 const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
   width: 4,
@@ -290,8 +303,10 @@ glassMat.roughness = 0.05;
 caseBox.material = glassMat;
 caseBox.position.z = -0.2;
 
+
+// ================= TAPE MATERIAL =================
 const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
-tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9); // if you want colored tape
+tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
 tapeMat.backFaceCulling = true;
 tape.material = tapeMat;
 
@@ -356,7 +371,7 @@ tape.material = tapeMat;
       if (isPlaying) {
         analyser.getByteFrequencyData(dataArray);
         const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
-        disc.rotate(BABYLON.Axis.Y, 0.01 + avg * 0.0003, BABYLON.Space.LOCAL);
+        disc.rotate(BABYLON.Axis.Y, 0.03 + avg * 0.0003, BABYLON.Space.LOCAL);
       }
       scene.render();
     });
