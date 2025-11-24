@@ -57,32 +57,22 @@ const kanyeSpotify = "https://open.spotify.com/artist/5K4W6rqBFWDnAN6FQUkS6x";
 
 // 1. Define the original tracklist including the special multi-part track
 const original_music_list = [
-  { name: "Intro (Skit)", file: "intro.mp3", url: "https://open.spotify.com/track/7lIr3vVhpDkU5mQEDcnA0S" },
-  { name: "We Don’t Care", file: "we-dont-care.mp3", url: "https://open.spotify.com/track/0IW0qaeyxL5Et4UG2MrJKB" },
-  { name: "Graduation Day", file: "graduation-day.mp3", url: "https://open.spotify.com/track/7wL7Lb8Q3aYyq6gmRL0PZqQ" },
-  { name: "All Falls Down", file: "all-falls-down.mp3", url: "https://open.spotify.com/track/5SkRLpaGtvYPhw02vZhQQ9" },
-  { name: "I’ll Fly Away", file: "fly-away.mp3", url: "https://open.spotify.com/track/6MgGapP3EPFm9kYUvYBTZR" },
-  { name: "Spaceship", file: "spaceship.mp3", url: "https://open.spotify.com/track/1ko2NuvWlQdxtNRc8QQzmT" },
-  { name: "Jesus Walks", file: "jesuswalks.mp3", url: "https://open.spotify.com/track/5g1vtHqi9uV7xtYeCcFOBx" },
-  { name: "Never Let Me Down", file: "never-let-me-down.mp3", url: "https://open.spotify.com/track/34j4OxJxKznBs88cjSL2j9" },
-  { name: "Get Em High", file: "get-em-high.mp3", url: "https://open.spotify.com/track/1PS1QMdUqOal0ai3Gt7sDQ" },
-  { name: "Workout Plan (Skit)", file: "workout-plan.mp3", url: "https://open.spotify.com/track/2a1JSfTePKhysdIif2bzut" },
-  { name: "The New Workout Plan", file: "new-workout-plan.mp3", url: "https://open.spotify.com/track/1Vp4St7JcXaUoJcIahtf3L" },
-  { name: "Slow Jamz", file: "slow-jamz.mp3", url: "https://open.spotify.com/track/3A4cpTBPaIQdtPFb5JxtaX" },
-  { name: "Breathe In Breathe Out", file: "bibo.mp3", url: "https://open.spotify.com/track/4KFY4EEv9CN6ivrzD6vEvg" },
-  { name: "School Spirit (Skit 1)", file: "ss-s1.mp3", url: "https://open.spotify.com/track/25mwJPzWVmS2yronBNQJF1" },
-  { name: "School Spirit", file: "school-spirit.mp3", url: "https://open.spotify.com/track/1th3G3okofWlvGWAAR7Y4V" },
-  { name: "School Spirit (Skit 2)", file: "ss-s2.mp3", url: "https://open.spotify.com/track/5MAY7XyW322jMwLDtBQgsZ" },
-  { name: "Lil Jimmy (Skit)", file: "#", url: "https://open.spotify.com/track/4BhwlQ9mTwhFGXpQvP9JTV?si=5-7HNlqCTiiXqxtIn7ABjg" },
-  { name: "Two Words", file: "2words.mp3", url: "https://open.spotify.com/track/62wtttQzoIA9HnNmGVd9Yq" },
-  { name: "Through the Wire", file: "through-the-wire.mp3", url: "https://open.spotify.com/track/4mmkhcEm1Ljy1U9nwtsxUo" },
-  { name: "Family Business", file: "family-business.mp3", url: "https://open.spotify.com/track/5DBmXF7QO43Cuy9yqva116" },
-  // Multi-part song
-  {
-    name: "Last Call",
-    file: ["lastcall1.mp3", "lastcall2.mp3", "lastcall3.mp3"],
-    url: "https://open.spotify.com/track/7iOhWWYjhhQiXzF4o4HhXN"
-  }
+  { name: "bye bye baby", file: "name.mp3", url: "spotify" },
+  { name: "the chakra", file: "name.mp3", url: "spotify" },
+  { name: "alien", file: "name.mp3", url: "spotify" },
+  { name: "new body", file: "name.mp3", url: "spotify" },
+  { name: "xxx", file: "name.mp3", url: "spotify" },
+  { name: "sky city", file: "name.mp3", url: "spotify" },
+  { name: "brothers", file: "name.mp3", url: "spotify" },
+  { name: "the garden", file: "name.mp3", url: "spotify" },
+  { name: "we free", file: "name.mp3", url: "spotify" },
+  { name: "we got love", file: "name.mp3", url: "spotify" },
+  { name: "cash to burn", file: "name.mp3", url: "spotify" },
+  { name: "hurricane", file: "name.mp3", url: "spotify" },
+  { name: "law of attraction", file: "name.mp3", url: "spotify" },
+  { name: "last name", file: "name.mp3", url: "spotify" },
+  { name: "spread your wings", file: "name.mp3", url: "spotify" },
+  { name: "end of it", file: "name.mp3", url: "spotify" }
 ];
 
 // 2. Flatten the list into a new array. Multi-part songs are chained together.
