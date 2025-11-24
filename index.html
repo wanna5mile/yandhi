@@ -194,14 +194,6 @@ function makeStandardTextureMaterial(name, url, scene, opts = {}) {
   // mat.specularColor = new BABYLON.Color3(0,0,0); // optional: reduce specular shine
   // mat.emissiveColor = new BABYLON.Color3(1,1,1); // optional: make texture unaffected by lights
 
-  // Extra: allow flipping/rotation options via opts (uScale/vScale/wAng/uOffset/vOffset)
-  if (opts.uScale !== undefined) tex.uScale = opts.uScale;
-  if (opts.vScale !== undefined) tex.vScale = opts.vScale;
-  if (opts.uOffset !== undefined) tex.uOffset = opts.uOffset;
-  if (opts.vOffset !== undefined) tex.vOffset = opts.vOffset;
-  if (opts.wAng !== undefined) { tex.uRotationCenter = 0.5; tex.vRotationCenter = 0.5; tex.wAng = opts.wAng; }
-  if (opts.uScaleMirror) { tex.uScale = -Math.abs(tex.uScale || 1); tex.uOffset = 1; }
-
   return mat;
 }
 
