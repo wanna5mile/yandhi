@@ -221,28 +221,17 @@ eighty.position.z = -0.2;
 const eightyMat = makeStandardTextureMaterial("eightyMat", "80fix.png", scene);
 eighty.material = eightyMat;
 
-// insert (vertical, not upside down, side-loaded)
+// insert (rotated counter-clockwise and respecting alpha)
 const insert = BABYLON.MeshBuilder.CreateBox("insert", {
   width: 0.5,
   height: 1.2,
   depth: 0.05
 }, scene);
-
 insert.position.x = 1.8;
 insert.position.y = 1.4;
 insert.position.z = -0.2;
-
-const insertMat = makeStandardTextureMaterial(
-  "insertMat",
-  "insertfix.png",
-  scene,
-  {
-    wAng: Math.PI / 2,   // rotate 90° clockwise so it's vertical
-    vScale: -1           // fixes upside-down
-  }
-);
-
-insert.material = insertMat;
+// note: wAng is rotation; -Math.PI/2 is 90° CCW
+const insertMat = makeStandardTextureMaterial("insertMat", "insertfix.png", scene, { wAng: -Math.PI / -2 });
 
 // minidisc (correct orientation)
 const minidisc = BABYLON.MeshBuilder.CreateBox("minidisc", {
