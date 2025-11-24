@@ -10,22 +10,22 @@ let isPlaying = false;
 
 /* Define your playlist */
 const music_list = [
-  { name: "bye bye baby", file: "./music/name.mp3" },
-  { name: "the chakra", file: "./music/name.mp3" },
-  { name: "alien", file: "./music/name.mp3" },
-  { name: "new body", file: "./music/name.mp3" },
-  { name: "xxx", file: "./music/name.mp3" },
-  { name: "sky city", file: "./music/name.mp3" },
-  { name: "brothers", file: "./music/name.mp3" },
-  { name: "the garden", file: "./music/name.mp3" },
-  { name: "we free", file: "./music/name.mp3" },
-  { name: "we got love", file: "./music/name.mp3" },
-  { name: "cash to burn", file: "./music/name.mp3" },
-  { name: "hurricane", file: "./music/name.mp3" },
-  { name: "law of attraction", file: "./music/name.mp3" },
-  { name: "last name", file: "./music/name.mp3" },
-  { name: "spread your wings", file: "./music/name.mp3" },
-  { name: "end of it", file: "./music/name.mp3" }
+  { name: "bye bye baby", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "the chakra", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "alien", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "new body", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "xxx", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "sky city", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "brothers", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "the garden", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "we free", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "we got love", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "cash to burn", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "hurricane", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "law of attraction", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "last name", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "spread your wings", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
+  { name: "end of it", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" }
 ];
 
 /* Load a track */
