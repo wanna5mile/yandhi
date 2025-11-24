@@ -146,7 +146,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const discMat = new BABYLON.PBRMaterial("discMat", scene);
     discMat.albedoTexture = new BABYLON.Texture("disc.png", scene);
-    discMat.backFaceCulling = false;
+    discMat.backFaceCulling = true;
     discMat.metallic = 0.4;
     discMat.roughness = 0.25;
     discMat.clearCoat.isEnabled = true;
@@ -172,7 +172,7 @@ function makeStandardTextureMaterial(name, url, scene, opts = {}) {
   mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
 
   // Optional: show both sides of thin planes (useful for flat boxes / quads)
-  mat.backFaceCulling = false;
+  mat.backFaceCulling = true;
 
   // If you want lighting to not darken the texture too much, you can tweak:
   // mat.specularColor = new BABYLON.Color3(0,0,0); // optional: reduce specular shine
@@ -254,7 +254,7 @@ caseBox.position.z = -0.2;
 
 const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
 tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9); // if you want colored tape
-tapeMat.backFaceCulling = false;
+tapeMat.backFaceCulling = true;
 tape.material = tapeMat;
 
     // ================= AUDIO ANALYSER =================
