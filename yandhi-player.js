@@ -30,7 +30,7 @@ const music_list = [
 
 /* Load a track */
 function loadTrack(index) {
-  track_index = index % music_list.length;
+  track_index = ((index % music_list.length) + music_list.length) % music_list.length; // handle negative index
   curr_track.src = music_list[track_index].file;
   curr_track.load();
   now_playing.textContent = music_list[track_index].name;
@@ -40,13 +40,13 @@ function loadTrack(index) {
 function playTrack() {
   curr_track.play();
   isPlaying = true;
-  playpause_btn.textContent = "Pause";
+  playpause_btn.innerHTML = '<i class="fa fa-pause-circle fa-5x"></i>';
 }
 
 function pauseTrack() {
   curr_track.pause();
   isPlaying = false;
-  playpause_btn.textContent = "Play";
+  playpause_btn.innerHTML = '<i class="fa fa-play-circle fa-5x"></i>';
 }
 
 function playpauseTrack() {
@@ -72,3 +72,4 @@ curr_track.addEventListener('ended', nextTrack);
 
 /* Init */
 loadTrack(0);
+pauseTrack(); // set initial icon to play
