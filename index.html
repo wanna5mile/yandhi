@@ -129,7 +129,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
       height: 0.06,
-      diameter: 0.4,
+      diameter: 0.2, // EDIT THIS TWIN
       tessellation: 64
     }, scene);
 
@@ -227,6 +227,30 @@ minidisc.position.y = -1.2;
 minidisc.position.z = -0.1;
 const minidiscMat = makeStandardTextureMaterial("minidiscMat", "minidiscfix.png", scene);
 minidisc.material = minidiscMat;
+
+// ================= CASE + TAPE (WAS MISSING - CAUSED CRASH) =================
+const tape = BABYLON.MeshBuilder.CreateBox("tape", {
+  width: 1.4,
+  height: 4 / 3,
+  depth: 0.2
+}, scene);
+
+tape.position.x = -1.4;
+tape.position.z = -0.2;
+
+const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
+  width: 4,
+  height: 4,
+  depth: 0.15
+}, scene);
+
+// Glass material for case
+const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
+glassMat.alpha = 0.25;
+glassMat.indexOfRefraction = 1.5;
+glassMat.roughness = 0.05;
+caseBox.material = glassMat;
+caseBox.position.z = -0.2;
 
 const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
 tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9); // if you want colored tape
