@@ -143,7 +143,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
       height: 0.06,
-      diameter: 0.1, // EDIT THIS TWIN
+      diameter: 0.1,
       tessellation: 64
     }, scene);
 
@@ -252,33 +252,29 @@ const insertMat = makeStandardTextureMaterial("insertMat", "insertfix.png", scen
 insert.material = insertMat;
 
 // ================= MINIDISC =================
-// Ensure this comes AFTER caseBox is created
-const minidiscDepth = 0.02; // thin enough to fit inside the cover
+const minidiscSize = 0.8;   // width & height
+const minidiscDepth = 0.02; // distance between front and back
 
-const minidisc = BABYLON.MeshBuilder.CreateBox("minidisc", {
-    width: 0.8,
-    height: 0.8,
-    depth: minidiscDepth,
-    faceUV: [
-        new BABYLON.Vector4(1, 1, 0, 0), // front
-        new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
-        new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
-        new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
-        new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
-        new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
-    ]
-}, scene);
+// Function to create a single minidisc face
+function createMinidiscFace(name, textureURL, scene) {
+    const plane = BABYLON.MeshBuilder.CreatePlane(name, {
+        width: minidiscSize,
+        height: minidiscSize
+    }, scene);
 
-// Position minidisc to sit inside cover
-minidisc.position.set(
-    0,          // x
-    -1.2,       // y
-    -0.2         // same as cover z; adjust slightly if needed
-);
+    const mat = makeStandardTextureMaterial(`${name}Mat`, textureURL, scene);
+    plane.material = mat;
 
-// Apply texture
-const minidiscMat = makeStandardTextureMaterial("minidiscMat", "minidiscfix.png", scene);
-minidisc.material = minidiscMat;
+    return plane;
+}
+
+// Create front and back as separate planes
+const frontMinidisc = createMinidiscFace("frontMinidisc", "minidiscfix.png", scene);
+frontMinidisc.position.set(0, -1.2, -0.25); // position inside cover
+
+const backMinidisc = createMinidiscFace("backMinidisc", "minidiscfix.png", scene);
+backMinidisc.position.set(0, -1.2, -0.12 + minidiscDepth); // slightly behind front
+backMinidisc.rotation.y = Math.PI; // flip to face opposite direction
 
 // ================= CASE + TAPE =================
 const tape = BABYLON.MeshBuilder.CreateBox("tape", {
