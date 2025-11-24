@@ -153,89 +153,85 @@ window.addEventListener("DOMContentLoaded", () => {
     discMat.clearCoat.intensity = 0.8;
     disc.material = discMat;
 
-    // ================= CASE + TAPE =================
-    const tape = BABYLON.MeshBuilder.CreateBox("tape", {
-      width: 1.4,
-      height: 4 / 3,
-      depth: 0.2
-    }, scene);
+// ---------------- GLOBAL HELPER: create a StandardMaterial that respects PNG alpha ----------------
+function makeStandardTextureMaterial(name, url, scene, opts = {}) {
+  const mat = new BABYLON.StandardMaterial(name, scene);
 
-    tape.position.x = -1.4;
-    tape.position.z = -0.2;
+  // Make sure the texture loads and uses its alpha channel
+  const tex = new BABYLON.Texture(url, scene);
+  tex.hasAlpha = true;                     // important: treat PNG alpha as real alpha
+  mat.diffuseTexture = tex;
 
-    const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
-    tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
-    tape.material = tapeMat;
+  // Show texture colors without tinting
+  mat.diffuseColor = new BABYLON.Color3(1, 1, 1);
 
-    const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
-      width: 4,
-      height: 4,
-      depth: 0.15
-    }, scene);
+  // Use the texture alpha to drive material transparency
+  mat.useAlphaFromDiffuseTexture = true;
 
-    
+  // Choose alpha blend mode so partially transparent pixels render smoothly
+  mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+
+  // Optional: show both sides of thin planes (useful for flat boxes / quads)
+  mat.backFaceCulling = false;
+
+  // If you want lighting to not darken the texture too much, you can tweak:
+  // mat.specularColor = new BABYLON.Color3(0,0,0); // optional: reduce specular shine
+  // mat.emissiveColor = new BABYLON.Color3(1,1,1); // optional: make texture unaffected by lights
+
+  // Extra: allow flipping/rotation options via opts (uScale/vScale/wAng/uOffset/vOffset)
+  if (opts.uScale !== undefined) tex.uScale = opts.uScale;
+  if (opts.vScale !== undefined) tex.vScale = opts.vScale;
+  if (opts.uOffset !== undefined) tex.uOffset = opts.uOffset;
+  if (opts.vOffset !== undefined) tex.vOffset = opts.vOffset;
+  if (opts.wAng !== undefined) { tex.uRotationCenter = 0.5; tex.vRotationCenter = 0.5; tex.wAng = opts.wAng; }
+  if (opts.uScaleMirror) { tex.uScale = -Math.abs(tex.uScale || 1); tex.uOffset = 1; }
+
+  return mat;
+}
+
+// ---------------- USAGE: replace your material construction with the helper ----------------
+
+// eighty
 const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
   width: 0.8,
-  height:0.8,
+  height: 0.8,
   depth: 0.05
 }, scene);
-
 eighty.position.x = -1.5;
 eighty.position.y = 1.5;
 eighty.position.z = -0.2;
-
-// Create material
-const eightyMat = new BABYLON.StandardMaterial("eightyMat", scene);
-eightyMat.diffuseTexture = new BABYLON.Texture("80fix.png", scene);
-
-// Apply material to mesh
+const eightyMat = makeStandardTextureMaterial("eightyMat", "80fix.png", scene);
 eighty.material = eightyMat;
 
+// insert (rotated counter-clockwise and respecting alpha)
 const insert = BABYLON.MeshBuilder.CreateBox("insert", {
   width: 0.5,
   height: 1.2,
   depth: 0.05
 }, scene);
-
 insert.position.x = 1.8;
 insert.position.y = 1.4;
 insert.position.z = -0.2;
-
-// Create material
-const insertMat = new BABYLON.StandardMaterial("insertMat", scene);
-insertMat.diffuseTexture = new BABYLON.Texture("insertfix.png", scene);
-
-// Rotate the texture 90 degrees clockwise
-insertMat.diffuseTexture.uRotationCenter = 0.5;
-insertMat.diffuseTexture.vRotationCenter = 0.5;
-insertMat.diffuseTexture.wAng = -Math.PI / 2; // rotate 90° counter-clockwise
-
-// Apply material to mesh
+// note: wAng is rotation; -Math.PI/2 is 90° CCW
+const insertMat = makeStandardTextureMaterial("insertMat", "insertfix.png", scene, { wAng: -Math.PI / 2 });
 insert.material = insertMat;
 
+// minidisc
 const minidisc = BABYLON.MeshBuilder.CreateBox("minidisc", {
   width: 0.8,
-  height:0.8,
+  height: 0.8,
   depth: 0.05
 }, scene);
-
 minidisc.position.x = 0;
 minidisc.position.y = -1.2;
 minidisc.position.z = -0.1;
-
-// Create material
-const minidiscMat = new BABYLON.StandardMaterial("minidiscMat", scene);
-minidiscMat.diffuseTexture = new BABYLON.Texture("minidiscfix.png", scene);
-
-// Apply material to mesh
+const minidiscMat = makeStandardTextureMaterial("minidiscMat", "minidiscfix.png", scene);
 minidisc.material = minidiscMat;
-    
-    const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
-    glassMat.alpha = 0.25;
-    glassMat.indexOfRefraction = 1.5;
-    glassMat.roughness = 0.05;
-    caseBox.material = glassMat;
-    caseBox.position.z = -0.2;
+
+const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
+tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9); // if you want colored tape
+tapeMat.backFaceCulling = false;
+tape.material = tapeMat;
 
     // ================= AUDIO ANALYSER =================
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
