@@ -378,6 +378,22 @@ tape.material = tapeMat;
 
 });
 </script>
+    
+<script type="module">
+import { initMusicPlayer } from './yandhi-player.js';
+
+window.addEventListener("DOMContentLoaded", () => {
+    const audio = document.getElementById("audio");
+    initMusicPlayer({
+        audio: audio,
+        playBtn: document.getElementById("playBtn"),
+        nextBtn: document.getElementById("nextBtn"),
+        prevBtn: document.getElementById("prevBtn"),
+        shuffleBtn: document.getElementById("shuffleBtn"),
+        repeatBtn: document.getElementById("repeatBtn")
+    });
+});
+</script>
 
   <script src="yandhi-player.js" defer></script>
   </body>
