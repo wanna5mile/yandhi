@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>My Beautiful Dark Twisted Fantasy Music Player</title>
+    <title>Yandhi Music Player</title>
     <link rel="icon" href="disc.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -131,41 +131,144 @@ window.addEventListener("DOMContentLoaded", () => {
     const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 2, -3), scene);
     pointLight.intensity = 0.6;
 
-    // ================= DISC =================
-    const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
-      height: 0.05,
-      diameter: 3,
-      tessellation: 96
-    }, scene);
+// ================= DISC (REPLACEMENT: ensures correct position after CSG) =================
 
-    discBody.position.x = 0;
-    discBody.position.z = -0.2;
+const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
+  height: 0.05,
+  diameter: 3,
+  tessellation: 96
+}, scene);
 
-    const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
-      height: 0.06,
-      diameter: 0.1,
-      tessellation: 64
-    }, scene);
+discBody.position.x = -2;
+discBody.position.z = -0.2;
 
-    hole.position.x = 0;
-    hole.position.z = -0.2;
+const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
+  height: 0.06,
+  diameter: 0.1,
+  tessellation: 64
+}, scene);
 
-    const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
-    const disc = discCSG.toMesh("disc", null, scene);
+hole.position.x = 0;
+hole.position.z = -0.2;
 
-    discBody.dispose();
-    hole.dispose();
+// Perform CSG and create the final disc mesh
+const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
+const disc = discCSG.toMesh("disc", null, scene);
 
-    disc.rotation.x = Math.PI / 2;
+// Ensure the resulting disc inherits the original transform (CSG can reset transforms)
+disc.position.copyFrom(discBody.position);
+disc.rotation.copyFrom(discBody.rotation || BABYLON.Vector3.Zero());
 
-    const discMat = new BABYLON.PBRMaterial("discMat", scene);
-    discMat.albedoTexture = new BABYLON.Texture("disc.png", scene);
-    discMat.backFaceCulling = true;
-    discMat.metallic = 0.4;
-    discMat.roughness = 0.25;
-    discMat.clearCoat.isEnabled = true;
-    discMat.clearCoat.intensity = 0.8;
-    disc.material = discMat;
+// dispose helpers
+discBody.dispose();
+hole.dispose();
+
+// orientation and material
+disc.rotation.x = Math.PI / 2;
+
+const discMat = new BABYLON.PBRMaterial("discMat", scene);
+discMat.albedoTexture = new BABYLON.Texture("https://images.rawpixel.com/image_png_social_square/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvam9iNjgxLTAwNDUtcC1sMWxnZ2hpbi5wbmc.png", scene);
+discMat.backFaceCulling = true;
+discMat.metallic = 0.4;
+discMat.roughness = 0.25;
+discMat.clearCoat.isEnabled = true;
+discMat.clearCoat.intensity = 0.8;
+disc.material = discMat;
+
+
+// ================= SLIDE + SPIN LOGIC (single-observable, analyzer-driven spin) =================
+
+let spinning = false;
+let spinObservable = null; // will store the disposable
+
+function slideAndSpinDisc() {
+  // Prevent multiple invocations
+  if (spinning || scene.getAnimationGroupByName && scene.getAnimationGroupByName("discSlideGroup")) {
+    return;
+  }
+
+  // SLIDE animation: position.x from current to 2
+  const slideAnim = new BABYLON.Animation(
+    "discSlide",
+    "position.x",
+    60,
+    BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+  );
+
+  const startX = disc.position.x;
+  slideAnim.setKeys([
+    { frame: 0, value: startX },
+    { frame: 30, value: 2 }
+  ]);
+
+  const ease = new BABYLON.CubicEase();
+  ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEOUT);
+  slideAnim.setEasingFunction(ease);
+
+  // attach animation and play
+  disc.animations = [slideAnim];
+  scene.beginAnimation(disc, 0, 30, false, 1, () => {
+    // when slide completed -> start spinning observable
+    if (spinObservable) {
+      scene.onBeforeRenderObservable.removeCallback(spinObservable);
+      spinObservable = null;
+    }
+
+    spinning = true;
+
+    // Add one observable that rotates the disc using frequency data for dynamic speed
+    spinObservable = function() {
+      // Get analyser data (safe-checks)
+      try {
+        analyser.getByteFrequencyData(dataArray);
+        const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        // Map avg -> spin speed (tweak the multiplier to taste)
+        const speed = 0.08 + avg * 0.0006;
+        // rotate on local Z (disc was rotated so Z makes it spin like a CD)
+        disc.rotation.z += speed;
+      } catch (e) {
+        // If analyser isn't available for some reason, fallback to constant spin
+        disc.rotation.z += 0.12;
+      }
+    };
+
+    scene.onBeforeRenderObservable.add(spinObservable);
+  });
+}
+
+
+// ================= PLAY BUTTON (call slide on play) =================
+
+playBtn.onclick = () => {
+  audioCtx.resume();
+
+  if (!isPlaying) {
+    audio.play();
+    isPlaying = true;
+    playIcon.classList.replace("fa-play-circle", "fa-pause-circle");
+
+    slideDisc(2, () => startSpin());
+
+  } else {
+    audio.pause();
+    isPlaying = false;
+    playIcon.classList.replace("fa-pause-circle", "fa-play-circle");
+
+    stopSpin();
+    slideDisc(0);
+  }
+};
+
+
+// ================= RENDER LOOP (remove direct disc.rotate) =================
+
+engine.runRenderLoop(() => {
+  scene.render();
+});
+
+
+
 
 // ---------------- GLOBAL HELPER: create a StandardMaterial that respects PNG alpha ----------------
 function makeStandardTextureMaterial(name, url, scene, opts = {}) {
@@ -207,83 +310,7 @@ function makeStandardTextureMaterial(name, url, scene, opts = {}) {
 }
 
 
-
-// ================= EIGHTY =================
-const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
-  width: 0.8,
-  height: 0.8,
-  depth: 0.05,
-  faceUV: [
-    new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
-    new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
-    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
-  ]
-}, scene);
-
-eighty.position.set(-1.5, 1.5, -0.2);
-
-// Apply texture to front and back
-const eightyMat = makeStandardTextureMaterial("eightyMat", "80fix.png", scene);
-eighty.material = eightyMat;
-
-
-// ================= INSERT =================
-const insert = BABYLON.MeshBuilder.CreateBox("insert", {
-  width: 0.5,
-  height: 1.2,
-  depth: 0.05,
-faceUV: [
-    new BABYLON.Vector4(1, 0, 0, 1), // front (normal)
-    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
-    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
-]
-}, scene);
-
-insert.position.set(1.8, 1.4, -0.2);
-
-// Apply texture to front and back
-const insertMat = makeStandardTextureMaterial("insertMat", "insertfix.png", scene);
-insert.material = insertMat;
-
-// ================= MINIDISC =================
-const minidiscSize = 0.8;   // width & height
-const minidiscDepth = 0.02; // distance between front and back
-
-// Function to create a single minidisc face
-function createMinidiscFace(name, textureURL, scene) {
-    const plane = BABYLON.MeshBuilder.CreatePlane(name, {
-        width: minidiscSize,
-        height: minidiscSize
-    }, scene);
-
-    const mat = makeStandardTextureMaterial(`${name}Mat`, textureURL, scene);
-    plane.material = mat;
-
-    return plane;
-}
-
-// Create front and back as separate planes
-const frontMinidisc = createMinidiscFace("frontMinidisc", "minidiscfix.png", scene);
-frontMinidisc.position.set(0, -1.2, -0.25); // position inside cover
-
-const backMinidisc = createMinidiscFace("backMinidisc", "minidiscfix.png", scene);
-backMinidisc.position.set(0, -1.2, -0.12 + minidiscDepth); // slightly behind front
-backMinidisc.rotation.y = Math.PI; // flip to face opposite direction
-
-// ================= CASE + TAPE =================
-const tape = BABYLON.MeshBuilder.CreateBox("tape", {
-  width: 1.4,
-  height: 4 / 3,
-  depth: 0.2
-}, scene);
-
-tape.position.set(-1.4, 0, -0.2);
+// ================= CASE (PURE RED) =================
 
 const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
   width: 4,
@@ -291,20 +318,40 @@ const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
   depth: 0.15
 }, scene);
 
-// Glass material for case
-const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
-glassMat.alpha = 0.25;
-glassMat.indexOfRefraction = 1.5;
-glassMat.roughness = 0.05;
-caseBox.material = glassMat;
+const caseMat = new BABYLON.StandardMaterial("caseMat", scene);
+caseMat.diffuseColor = new BABYLON.Color3(1, 0.18, 0.3); // pure red
+caseMat.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+
+caseBox.material = caseMat;
 caseBox.position.z = -0.2;
 
 
-// ================= TAPE MATERIAL =================
-const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
-tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
-tapeMat.backFaceCulling = true;
-tape.material = tapeMat;
+// ================= CASE COVER (INSERT STYLE) =================
+
+const caseCover = BABYLON.MeshBuilder.CreateBox("case-cover", {
+  width: 4,
+  height: 4,
+  depth: 0.05,
+  faceUV: [
+    new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
+    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+  ]
+}, scene);
+
+
+// Position it flush on the front of the case
+caseCover.position.set(0, 0, caseBox.position.z + 0.3);
+caseCover.parent = caseBox;
+
+
+// ================= MATERIAL =================
+
+const coverMat = makeStandardTextureMaterial("coverMat", "../mbdtf/cover/mbdtf.png", scene);
+caseCover.material = coverMat;
 
     // ================= AUDIO ANALYSER =================
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -378,23 +425,7 @@ tape.material = tapeMat;
 
 });
 </script>
-    
-<script type="module">
-import { initMusicPlayer } from './yandhi-player.js';
 
-window.addEventListener("DOMContentLoaded", () => {
-    const audio = document.getElementById("audio");
-    initMusicPlayer({
-        audio: audio,
-        playBtn: document.getElementById("playBtn"),
-        nextBtn: document.getElementById("nextBtn"),
-        prevBtn: document.getElementById("prevBtn"),
-        shuffleBtn: document.getElementById("shuffleBtn"),
-        repeatBtn: document.getElementById("repeatBtn")
-    });
-});
-</script>
-
-  <script src="mbdtf-player.js" defer></script>
+  <script src="yandhi-player.js" defer></script>
   </body>
 </html>
