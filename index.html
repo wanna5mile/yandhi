@@ -23,8 +23,9 @@
 <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
+
 <body id="pageBody">
-  <div id="bgLayer"></div>
+<div id="bgLayer"></div>
 
 <div id="loadingOverlay">
   <div class="loading-info">
@@ -71,12 +72,21 @@
   <div id="homePage">
     <div id="portContainer" class="album-grid"></div>
   </div>
+
   <div id="aboutPage" style="display:none;">
-    <div class="glass-panel"><h2>About</h2><p>This page hosts your album collection. Click any album to launch its interactive 3D visualizer player.</p></div>
+    <div class="glass-panel">
+      <h2>About</h2>
+      <p>This page hosts your album collection. Click any album to launch its interactive 3D visualizer player.</p>
+    </div>
   </div>
+
   <div id="settingsPage" style="display:none;"></div>
+
   <div id="contactPage" style="display:none;">
-    <div class="glass-panel"><h2>Contact</h2><p>Contact page goes here.</p></div>
+    <div class="glass-panel">
+      <h2>Contact</h2>
+      <p>Contact page goes here.</p>
+    </div>
   </div>
 </main>
 
@@ -91,6 +101,7 @@
 </div>
 
 <hr>
+
 <footer>
   <a href="#">discord</a>
   <a href="#">suggestions & bug fixes</a>
@@ -102,74 +113,62 @@
   <div id="profileModalContent" role="dialog" aria-modal="true">
     <h3>Edit Profile</h3>
     <img id="profileLarge" class="profile-large" src="profile.png" alt="Profile preview">
-    <div>
-      <input type="file" id="profilePicInput" accept="image/*" />
-    </div>
+    <input type="file" id="profilePicInput" accept="image/*" />
     <div id="cropContainer">
       <img id="cropPreview" alt="Crop preview" />
-      <div style="margin-top:8px;">
+      <div>
         <button class="modal-btn save-btn" id="cropConfirm">Crop</button>
         <button class="modal-btn cancel-btn" id="cropCancel">Cancel</button>
       </div>
     </div>
-    <div style="margin-top:12px;">
-      <button class="modal-btn remove-btn" id="removePicBtn">Remove picture</button>
-    </div>
-    <div style="margin-top:12px;">
-      <input type="text" id="usernameInput" placeholder="Enter nickname" />
-    </div>
-    <div style="margin-top:14px;">
-      <button class="modal-btn save-btn" id="saveProfileBtn">Save changes</button>
-      <button class="modal-btn cancel-btn" id="closeProfileBtn">Close</button>
-    </div>
+    <button class="modal-btn remove-btn" id="removePicBtn">Remove picture</button>
+    <input type="text" id="usernameInput" placeholder="Enter nickname" />
+    <button class="modal-btn save-btn" id="saveProfileBtn">Save changes</button>
+    <button class="modal-btn cancel-btn" id="closeProfileBtn">Close</button>
   </div>
 </div>
 
 <script src="script.js"></script>
+
 <script>
-// ALBUM DATA (edit links to match your 3D visualizer pages)
-const albums = [
-  {
-    title: "The College Dropout",
-    cover: "covers/college-dropout.jpg",
-    link: "players/college-dropout.html"
-  },
-  {
-    title: "My Beautiful Dark Twisted Fantasy",
-    cover: "covers/mbdtf.jpg",
-    link: "players/mbdtf.html"
-  },
-  {
-    title: "Yandhi",
-    cover: "covers/yandhi.jpg",
-    link: "players/yandhi.html"
-  }
-];
-
+// LOAD ALBUMS FROM discography.json
 const container = document.getElementById('portContainer');
+let albums = [];
 
-albums.forEach(album => {
-  const card = document.createElement('a');
-  card.href = album.link;
-  card.className = 'album-card';
-  card.innerHTML = `
-    <div class="album-cover">
-      <img src="${album.cover}" alt="${album.title}">
-    </div>
-    <div class="album-title">${album.title}</div>
-  `;
-  container.appendChild(card);
-});
+fetch("discography.json")
+  .then(response => response.json())
+  .then(data => {
+    albums = data;
 
-// PRELOAD ALL IMAGES BEFORE ANYTHING SHOWS
-const imagesToPreload = [
-  "background.png",
-  "webgL.png",
-  "profile.png",
-  "thoth.png",
-  "search.png",
-  ...albums.map(a => a.cover)
-];
+    albums.forEach(album => {
+      const card = document.createElement('a');
+      card.href = album.link;
+      card.className = 'album-card';
+      card.innerHTML = `
+        <div class="album-cover">
+          <img src="${album.image}" alt="${album.title}">
+        </div>
+        <div class="album-title">${album.title}</div>
+      `;
+      container.appendChild(card);
+    });
+
+    const imagesToPreload = [
+      "background.png",
+      "webgL.png",
+      "profile.png",
+      "thoth.png",
+      "search.png",
+      ...albums.map(a => a.image)
+    ];
+
+    preloadImages(imagesToPreload).then(() => {
+      document.getElementById("loadingOverlay").style.display = "none";
+    });
+  })
+  .catch(error => {
+    console.error("Error loading discography.json:", error);
+  });
 
 function preloadImages(list) {
   return Promise.all(list.map(src => {
@@ -181,10 +180,7 @@ function preloadImages(list) {
     });
   }));
 }
-
-preloadImages(imagesToPreload).then(() => {
-  document.getElementById("loadingOverlay").style.display = "none";
-});
 </script>
+
 </body>
 </html>
