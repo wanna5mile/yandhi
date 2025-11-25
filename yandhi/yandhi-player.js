@@ -23,7 +23,7 @@ const music_list = [
   { name: "cash to burn", file: "tracks/byebyebaby.mp3" },
   { name: "hurricane", file: "tracks/byebyebaby.mp3" },
   { name: "law of attraction", file: "tracks/byebyebaby.mp3" },
-  { name: "last name", file: "tracks/byebyebaby.mp3" },
+  { name: "last name", file: "tracks/lastname.mp3" },
   { name: "spread your wings", file: "tracks/byebyebaby.mp3" },
   { name: "end of it", file: "tracks/byebyebaby.mp3" }
 ];
