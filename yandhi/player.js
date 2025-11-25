@@ -11,7 +11,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("renderCanvas");
     const audio = document.getElementById("audio");
 
-    const playlist = ["./assets/music/byebyebaby.mp3"];
+    const playlist = ["/tracks/byebyebaby.mp3"];
     let currentIndex = 0;
     let isPlaying = false;
 
