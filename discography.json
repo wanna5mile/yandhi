@@ -1,0 +1,16 @@
+[
+  { "image": "kanye/the-college-dropout/icon.png", "title": "The College Dropout", "link": "players/the-college-dropout.html" },
+  { "image": "kanye/late-registration/icon.png", "title": "Late Registration", "link": "players/late-registration.html" },
+  { "image": "kanye/graduation/icon.png", "title": "Graduation", "link": "players/graduation.html" },
+  { "image": "kanye/808s-heartbreak/icon.png", "title": "808s & Heartbreak", "link": "players/808s-heartbreak.html" },
+  { "image": "kanye/my-beautiful-dark-twisted-fantasy/icon.png", "title": "My Beautiful Dark Twisted Fantasy", "link": "players/mbdtf.html" },
+  { "image": "kanye/watch-the-throne/icon.png", "title": "Watch The Throne", "link": "players/watch-the-throne.html" },
+  { "image": "kanye/yeezus/icon.png", "title": "Yeezus", "link": "players/yeezus.html" },
+  { "image": "kanye/the-life-of-pablo/icon.png", "title": "The Life Of Pablo", "link": "players/the-life-of-pablo.html" },
+  { "image": "kanye/ye/icon.png", "title": "ye", "link": "players/ye.html" },
+  { "image": "kanye/kids-see-ghosts/icon.png", "title": "Kids See Ghosts", "link": "players/kids-see-ghosts.html" },
+  { "image": "kanye/jesus-is-king/icon.png", "title": "Jesus Is King", "link": "players/jesus-is-king.html" },
+  { "image": "kanye/donda/icon.png", "title": "Donda", "link": "players/donda.html" },
+  { "image": "kanye/donda-2/icon.png", "title": "Donda 2", "link": "players/donda-2.html" },
+  { "image": "kanye/yandhi/icon.png", "title": "Yandhi", "link": "players/yandhi.html" }
+]
