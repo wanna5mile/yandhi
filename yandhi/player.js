@@ -76,7 +76,7 @@ window.addEventListener("DOMContentLoaded", () => {
     disc.rotation.x = Math.PI / 2;
 
     const discMat = new BABYLON.PBRMaterial("discMat", scene);
-    discMat.albedoTexture = new BABYLON.Texture("src/assets/textures/disc.png", scene);
+    discMat.albedoTexture = new BABYLON.Texture("images/disc.png", scene);
     discMat.backFaceCulling = false;
     discMat.metallic = 0.4;
     discMat.roughness = 0.25;
