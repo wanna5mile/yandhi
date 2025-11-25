@@ -10,22 +10,22 @@ let isPlaying = false;
 
 /* Define your playlist */
 const music_list = [
-  { name: "bye bye baby", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "the chakra", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "alien", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "new body", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "xxx", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "sky city", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "brothers", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "the garden", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "we free", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "we got love", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "cash to burn", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "hurricane", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "law of attraction", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "last name", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "spread your wings", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" },
-  { name: "end of it", file: "albums/yandhi/assets/tracks/byebyebaby.mp3" }
+  { name: "bye bye baby", file: "tracks/byebyebaby.mp3" },
+  { name: "the chakra", file: "tracks/byebyebaby.mp3" },
+  { name: "alien", file: "tracks/byebyebaby.mp3" },
+  { name: "new body", file: "tracks/byebyebaby.mp3" },
+  { name: "xxx", file: "tracks/byebyebaby.mp3" },
+  { name: "sky city", file: "tracks/byebyebaby.mp3" },
+  { name: "brothers", file: "tracks/byebyebaby.mp3" },
+  { name: "the garden", file: "tracks/byebyebaby.mp3" },
+  { name: "we free", file: "tracks/byebyebaby.mp3" },
+  { name: "we got love", file: "tracks/byebyebaby.mp3" },
+  { name: "cash to burn", file: "tracks/byebyebaby.mp3" },
+  { name: "hurricane", file: "tracks/byebyebaby.mp3" },
+  { name: "law of attraction", file: "tracks/byebyebaby.mp3" },
+  { name: "last name", file: "tracks/byebyebaby.mp3" },
+  { name: "spread your wings", file: "tracks/byebyebaby.mp3" },
+  { name: "end of it", file: "tracks/byebyebaby.mp3" }
 ];
 
 /* Load a track */
