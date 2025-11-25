@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Yeezy Music Player</title>
+<link rel="icon" href="favicon.png" type="image/png">
+
+<script async defer src="https://cdn.jsdelivr.net/npm/@widgetbot/crate@3"></script>
+
+<meta property="og:title" content="WannaSmile" />
+<meta property="og:description" content="Welcome to WannaSmile — explore albums and launch 3D visualizer music players." />
+<meta property="og:image" content="https://www.yourwebsite.com/path/to/your/preview-image.jpg" />
+<meta property="og:url" content="https://vvannasmile.github.io/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="WannaSmile.github.io" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="WannaSmile" />
+<meta name="twitter:description" content="A fun, content-filled library to make you smile." />
+<meta name="twitter:image" content="https://www.yourwebsite.com/path/to/your/preview-image.jpg" />
+
+<link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+<script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="pageBody">
+  <div id="bgLayer"></div>
+
+<div id="loadingOverlay">
+  <div class="loading-info">
+    <div class="loading-text">Loading...</div>
+    <div id="loadingPercent" class="loading-percentage">0%</div>
+    <div class="loading-bar-container">
+      <div id="progressBar" class="loading-bar"></div>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="header-left">
+    <div class="brand">
+      <img src="webgL.png" alt="Site Logo">
+    </div>
+    <nav>
+      <a href="#" id="homeLink">Home</a>
+      <a href="#" id="aboutLink">About</a>
+      <a href="#" id="settingsLink">Settings</a>
+      <a href="#" id="contactLink">Contact</a>
+    </nav>
+  </div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <input type="text" id="liveSearch" placeholder="Search albums...">
+      <img src="search.png" class="icon" alt="search">
+    </div>
+    <div class="profile-icon" id="profileIcon" title="Open profile">
+      <img id="profileImage" src="profile.png" alt="profile">
+    </div>
+    <button id="dashBtn" class="dashboard-btn">
+      <span class="dash-icon"><div></div><div></div><div></div></span>
+    </button>
+  </div>
+</header>
+
+<h1 id="welcomeMessage">Albums Library</h1>
+<div id="thoughtSpeaker">
+  <img src="thoth.png" alt="speaker" />
+</div>
+
+<main id="mainContent">
+  <div id="homePage">
+    <div id="portContainer" class="album-grid"></div>
+  </div>
+  <div id="aboutPage" style="display:none;">
+    <div class="glass-panel"><h2>About</h2><p>This page hosts your album collection. Click any album to launch its interactive 3D visualizer player.</p></div>
+  </div>
+  <div id="settingsPage" style="display:none;"></div>
+  <div id="contactPage" style="display:none;">
+    <div class="glass-panel"><h2>Contact</h2><p>Contact page goes here.</p></div>
+  </div>
+</main>
+
+<div id="dashboardPanel" class="dashboard-panel">
+  <p>pages</p>
+  <a href="https://bguhm.github.io/music-player.html" target="_blank">Music Player</a>
+  <a href="system/pages/settings-themes.html" target="_blank">Themes</a>
+  <a href="system/pages/credits.html" target="_blank">Credits</a>
+  <p>dev tools</p>
+  <a href="#">Console</a>
+  <a href="#">Inspector</a>
+</div>
+
+<hr>
+<footer>
+  <a href="#">discord</a>
+  <a href="#">suggestions & bug fixes</a>
+  <a href="#">version: v0.1</a>
+  <a href="#">other projects</a>
+</footer>
+
+<div id="profileModal" aria-hidden="true">
+  <div id="profileModalContent" role="dialog" aria-modal="true">
+    <h3>Edit Profile</h3>
+    <img id="profileLarge" class="profile-large" src="profile.png" alt="Profile preview">
+    <div>
+      <input type="file" id="profilePicInput" accept="image/*" />
+    </div>
+    <div id="cropContainer">
+      <img id="cropPreview" alt="Crop preview" />
+      <div style="margin-top:8px;">
+        <button class="modal-btn save-btn" id="cropConfirm">Crop</button>
+        <button class="modal-btn cancel-btn" id="cropCancel">Cancel</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="modal-btn remove-btn" id="removePicBtn">Remove picture</button>
+    </div>
+    <div style="margin-top:12px;">
+      <input type="text" id="usernameInput" placeholder="Enter nickname" />
+    </div>
+    <div style="margin-top:14px;">
+      <button class="modal-btn save-btn" id="saveProfileBtn">Save changes</button>
+      <button class="modal-btn cancel-btn" id="closeProfileBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+// ALBUM DATA (edit links to match your 3D visualizer pages)
+const albums = [
+  {
+    title: "The College Dropout",
+    cover: "covers/college-dropout.jpg",
+    link: "players/college-dropout.html"
+  },
+  {
+    title: "My Beautiful Dark Twisted Fantasy",
+    cover: "covers/mbdtf.jpg",
+    link: "players/mbdtf.html"
+  },
+  {
+    title: "Yandhi",
+    cover: "covers/yandhi.jpg",
+    link: "players/yandhi.html"
+  }
+];
+
+const container = document.getElementById('portContainer');
+
+albums.forEach(album => {
+  const card = document.createElement('a');
+  card.href = album.link;
+  card.className = 'album-card';
+  card.innerHTML = `
+    <div class="album-cover">
+      <img src="${album.cover}" alt="${album.title}">
+    </div>
+    <div class="album-title">${album.title}</div>
+  `;
+  container.appendChild(card);
+});
+
+// PRELOAD ALL IMAGES BEFORE ANYTHING SHOWS
+const imagesToPreload = [
+  "background.png",
+  "webgL.png",
+  "profile.png",
+  "thoth.png",
+  "search.png",
+  ...albums.map(a => a.cover)
+];
+
+function preloadImages(list) {
+  return Promise.all(list.map(src => {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = resolve;
+      img.onerror = resolve;
+      img.src = src;
+    });
+  }));
+}
+
+preloadImages(imagesToPreload).then(() => {
+  document.getElementById("loadingOverlay").style.display = "none";
+});
+</script>
+</body>
+</html>
