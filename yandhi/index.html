@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Yandhi Music Player</title>
-    <link rel="icon" href="disc.png" type="image/png">
+    <link rel="icon" href="images/disc.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
       html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
@@ -159,7 +159,7 @@ window.addEventListener("DOMContentLoaded", () => {
     disc.rotation.x = Math.PI / 2;
 
     const discMat = new BABYLON.PBRMaterial("discMat", scene);
-    discMat.albedoTexture = new BABYLON.Texture("disc.png", scene);
+    discMat.albedoTexture = new BABYLON.Texture("images/disc.png", scene);
     discMat.backFaceCulling = true;
     discMat.metallic = 0.4;
     discMat.roughness = 0.25;
@@ -226,7 +226,7 @@ const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
 eighty.position.set(-1.5, 1.5, -0.2);
 
 // Apply texture to front and back
-const eightyMat = makeStandardTextureMaterial("eightyMat", "80fix.png", scene);
+const eightyMat = makeStandardTextureMaterial("eightyMat", "images/80fix.png", scene);
 eighty.material = eightyMat;
 
 
@@ -248,7 +248,7 @@ faceUV: [
 insert.position.set(1.8, 1.4, -0.2);
 
 // Apply texture to front and back
-const insertMat = makeStandardTextureMaterial("insertMat", "insertfix.png", scene);
+const insertMat = makeStandardTextureMaterial("insertMat", "images/insertfix.png", scene);
 insert.material = insertMat;
 
 // ================= MINIDISC =================
@@ -269,10 +269,10 @@ function createMinidiscFace(name, textureURL, scene) {
 }
 
 // Create front and back as separate planes
-const frontMinidisc = createMinidiscFace("frontMinidisc", "minidiscfix.png", scene);
+const frontMinidisc = createMinidiscFace("frontMinidisc", "images/minidiscfix.png", scene);
 frontMinidisc.position.set(0, -1.2, -0.25); // position inside cover
 
-const backMinidisc = createMinidiscFace("backMinidisc", "minidiscfix.png", scene);
+const backMinidisc = createMinidiscFace("backMinidisc", "images/minidiscfix.png", scene);
 backMinidisc.position.set(0, -1.2, -0.12 + minidiscDepth); // slightly behind front
 backMinidisc.rotation.y = Math.PI; // flip to face opposite direction
 
