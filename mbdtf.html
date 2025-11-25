@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>My Beautiful Dark Twisted Fantasy Music Player</title>
+    <link rel="icon" href="disc.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+      #renderCanvas { width: 100%; height: 100%; touch-action: none; }
+      .player-controls {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+        z-index: 10;
+      }
+      .player-controls button {
+        background: rgba(0, 0, 0, 0.6);
+        border: none;
+        color: white;
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        transition: all 0.2s ease;
+      }
+      .player-controls button:hover {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.15);
+      }
+      #playBtn { width: 90px; height: 90px; }
+      .player-controls button.active {
+        background: rgba(0, 170, 255, 0.6);
+        box-shadow: 0 0 15px rgba(0, 170, 255, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="renderCanvas"></canvas>
+
+    <div class="player-controls">
+<div class="player-controls">
+  <button class="random-track" id="shuffleBtn">
+    <i class="fas fa-random fa-2x"></i>
+  </button>
+
+  <button class="prev-track" id="prevBtn">
+    <i class="fa fa-step-backward fa-2x"></i>
+  </button>
+
+  <button class="playpause-track" id="playBtn">
+    <i class="fa fa-play-circle fa-5x"></i>
+  </button>
+
+  <button class="next-track" id="nextBtn">
+    <i class="fa fa-step-forward fa-2x"></i>
+  </button>
+
+  <button class="repeat-track" id="repeatBtn">
+    <i class="fas fa-redo fa-2x"></i>
+  </button>
+</div>
+    </div>
+
+<audio id="audio" preload="auto"></audio>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+
+<!--EVENTS AND BUILD HERE DAWG -->
+<script>
+// ✅ SINGLE-FILE WORKING MUSIC PLAYER (RESTORED + MERGED + STABLE)
+// Drop this in event.js and REMOVE other JS imports
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const waitForBabylon = setInterval(() => {
+    if (!window.BABYLON) return;
+    clearInterval(waitForBabylon);
+    
+
+    // ================= AUDIO SETUP =================
+    const canvas = document.getElementById("renderCanvas");
+    const audio = document.getElementById("audio");
+
+    const playlist = ["./assets/music/byebyebaby.mp3"];
+    let currentIndex = 0;
+    let isPlaying = false;
+
+    audio.src = playlist[currentIndex];
+
+    // ================= BUTTONS =================
+    const playBtn = document.getElementById("playBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const shuffleBtn = document.getElementById("shuffleBtn");
+    const repeatBtn = document.getElementById("repeatBtn");
+    const playIcon = playBtn.querySelector("i");
+
+    let shuffle = false;
+    let repeat = false;
+
+    // ================= BABYLON ENGINE =================
+    const engine = new BABYLON.Engine(canvas, true);
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+
+    const camera = new BABYLON.ArcRotateCamera(
+      "camera",
+      Math.PI / 2,
+      Math.PI / 2.5,
+      8,
+      BABYLON.Vector3.Zero(),
+      scene
+    );
+    camera.attachControl(canvas, true);
+
+    // Lighting
+    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+    hemiLight.intensity = 0.4;
+
+    const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.5, -1, -0.5), scene);
+    dirLight.position = new BABYLON.Vector3(5, 8, 5);
+    dirLight.intensity = 1.2;
+
+    const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 2, -3), scene);
+    pointLight.intensity = 0.6;
+
+    // ================= DISC =================
+    const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
+      height: 0.05,
+      diameter: 3,
+      tessellation: 96
+    }, scene);
+
+    discBody.position.x = 0;
+    discBody.position.z = -0.2;
+
+    const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
+      height: 0.06,
+      diameter: 0.1,
+      tessellation: 64
+    }, scene);
+
+    hole.position.x = 0;
+    hole.position.z = -0.2;
+
+    const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
+    const disc = discCSG.toMesh("disc", null, scene);
+
+    discBody.dispose();
+    hole.dispose();
+
+    disc.rotation.x = Math.PI / 2;
+
+    const discMat = new BABYLON.PBRMaterial("discMat", scene);
+    discMat.albedoTexture = new BABYLON.Texture("disc.png", scene);
+    discMat.backFaceCulling = true;
+    discMat.metallic = 0.4;
+    discMat.roughness = 0.25;
+    discMat.clearCoat.isEnabled = true;
+    discMat.clearCoat.intensity = 0.8;
+    disc.material = discMat;
+
+// ---------------- GLOBAL HELPER: create a StandardMaterial that respects PNG alpha ----------------
+function makeStandardTextureMaterial(name, url, scene, opts = {}) {
+  const mat = new BABYLON.StandardMaterial(name, scene);
+
+  const tex = new BABYLON.Texture(url, scene);
+  tex.hasAlpha = true;
+
+  mat.diffuseTexture = tex;
+
+  mat.diffuseColor = new BABYLON.Color3(1, 1, 1);
+  mat.useAlphaFromDiffuseTexture = true;
+  mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+  mat.backFaceCulling = true;
+
+  // Optional lighting tweaks
+  // mat.specularColor = new BABYLON.Color3(0,0,0);
+  // mat.emissiveColor = new BABYLON.Color3(1,1,1);
+
+  // ---------------- OVERRIDE CONTROLS ----------------
+  if (opts.uScale !== undefined) tex.uScale = opts.uScale;
+  if (opts.vScale !== undefined) tex.vScale = opts.vScale;
+  if (opts.uOffset !== undefined) tex.uOffset = opts.uOffset;
+  if (opts.vOffset !== undefined) tex.vOffset = opts.vOffset;
+
+  if (opts.wAng !== undefined) {
+    tex.uRotationCenter = 0.5;
+    tex.vRotationCenter = 0.5;
+    tex.wAng = opts.wAng;
+  }
+
+  // Horizontal mirror helper (optional)
+  if (opts.uScaleMirror) {
+    tex.uScale = -Math.abs(tex.uScale || 1);
+    tex.uOffset = 1;
+  }
+
+  return mat;
+}
+
+
+
+// ================= EIGHTY =================
+const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
+  width: 0.8,
+  height: 0.8,
+  depth: 0.05,
+  faceUV: [
+    new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
+    new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+  ]
+}, scene);
+
+eighty.position.set(-1.5, 1.5, -0.2);
+
+// Apply texture to front and back
+const eightyMat = makeStandardTextureMaterial("eightyMat", "80fix.png", scene);
+eighty.material = eightyMat;
+
+
+// ================= INSERT =================
+const insert = BABYLON.MeshBuilder.CreateBox("insert", {
+  width: 0.5,
+  height: 1.2,
+  depth: 0.05,
+faceUV: [
+    new BABYLON.Vector4(1, 0, 0, 1), // front (normal)
+    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+]
+}, scene);
+
+insert.position.set(1.8, 1.4, -0.2);
+
+// Apply texture to front and back
+const insertMat = makeStandardTextureMaterial("insertMat", "insertfix.png", scene);
+insert.material = insertMat;
+
+// ================= MINIDISC =================
+const minidiscSize = 0.8;   // width & height
+const minidiscDepth = 0.02; // distance between front and back
+
+// Function to create a single minidisc face
+function createMinidiscFace(name, textureURL, scene) {
+    const plane = BABYLON.MeshBuilder.CreatePlane(name, {
+        width: minidiscSize,
+        height: minidiscSize
+    }, scene);
+
+    const mat = makeStandardTextureMaterial(`${name}Mat`, textureURL, scene);
+    plane.material = mat;
+
+    return plane;
+}
+
+// Create front and back as separate planes
+const frontMinidisc = createMinidiscFace("frontMinidisc", "minidiscfix.png", scene);
+frontMinidisc.position.set(0, -1.2, -0.25); // position inside cover
+
+const backMinidisc = createMinidiscFace("backMinidisc", "minidiscfix.png", scene);
+backMinidisc.position.set(0, -1.2, -0.12 + minidiscDepth); // slightly behind front
+backMinidisc.rotation.y = Math.PI; // flip to face opposite direction
+
+// ================= CASE + TAPE =================
+const tape = BABYLON.MeshBuilder.CreateBox("tape", {
+  width: 1.4,
+  height: 4 / 3,
+  depth: 0.2
+}, scene);
+
+tape.position.set(-1.4, 0, -0.2);
+
+const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
+  width: 4,
+  height: 4,
+  depth: 0.15
+}, scene);
+
+// Glass material for case
+const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
+glassMat.alpha = 0.25;
+glassMat.indexOfRefraction = 1.5;
+glassMat.roughness = 0.05;
+caseBox.material = glassMat;
+caseBox.position.z = -0.2;
+
+
+// ================= TAPE MATERIAL =================
+const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
+tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
+tapeMat.backFaceCulling = true;
+tape.material = tapeMat;
+
+    // ================= AUDIO ANALYSER =================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    const src = audioCtx.createMediaElementSource(audio);
+    src.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    // ================= CONTROLS =================
+    playBtn.onclick = () => {
+      audioCtx.resume();
+
+      if (!isPlaying) {
+        audio.play();
+        isPlaying = true;
+        playIcon.classList.replace("fa-play-circle", "fa-pause-circle");
+      } else {
+        audio.pause();
+        isPlaying = false;
+        playIcon.classList.replace("fa-pause-circle", "fa-play-circle");
+      }
+    };
+
+    nextBtn.onclick = () => {
+      currentIndex = shuffle
+        ? Math.floor(Math.random() * playlist.length)
+        : (currentIndex + 1) % playlist.length;
+
+      audio.src = playlist[currentIndex];
+      audio.play();
+      isPlaying = true;
+    };
+
+    prevBtn.onclick = () => {
+      currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+      audio.src = playlist[currentIndex];
+      audio.play();
+      isPlaying = true;
+    };
+
+    shuffleBtn.onclick = () => {
+      shuffle = !shuffle;
+      shuffleBtn.classList.toggle("active", shuffle);
+    };
+
+    repeatBtn.onclick = () => {
+      repeat = !repeat;
+      repeatBtn.classList.toggle("active", repeat);
+      audio.loop = repeat;
+    };
+
+    audio.addEventListener("ended", () => {
+      if (!repeat) nextBtn.onclick();
+    });
+
+    // ================= RENDER LOOP =================
+    engine.runRenderLoop(() => {
+      if (isPlaying) {
+        analyser.getByteFrequencyData(dataArray);
+        const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
+        disc.rotate(BABYLON.Axis.Y, 0.03 + avg * 0.0003, BABYLON.Space.LOCAL);
+      }
+      scene.render();
+    });
+
+    window.addEventListener("resize", () => engine.resize());
+
+  }, 10);
+
+});
+</script>
+    
+<script type="module">
+import { initMusicPlayer } from './yandhi-player.js';
+
+window.addEventListener("DOMContentLoaded", () => {
+    const audio = document.getElementById("audio");
+    initMusicPlayer({
+        audio: audio,
+        playBtn: document.getElementById("playBtn"),
+        nextBtn: document.getElementById("nextBtn"),
+        prevBtn: document.getElementById("prevBtn"),
+        shuffleBtn: document.getElementById("shuffleBtn"),
+        repeatBtn: document.getElementById("repeatBtn")
+    });
+});
+</script>
+
+  <script src="mbdtf-player.js" defer></script>
+  </body>
+</html>
