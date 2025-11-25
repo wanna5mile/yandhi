@@ -10,22 +10,22 @@ let isPlaying = false;
 
 /* Define your playlist */
 const music_list = [
-  { name: "Dark Fantasy", file: "" },
-  { name: "Gorgeous", file: "" },
-  { name: "POWER", file: "" },
-  { name: "All of the lights (interlude)", file: "" },
-  { name: "All of the lights (ft. Rihanna)", file: "" },
-  { name: "Monster", file: "" },
-  { name: "So Appalled", file: "" },
-  { name: "Devil in a new dress (ft. Rick Ross)", file: "" },
-  { name: "Runaway", file: "" },
-  { name: "Hell of a life", file: "" },
-  { name: "Blame Game", file: "" },
-  { name: "Lost in the World", file: "" },
-  { name: "Who will Survive in America", file: "" },
-  { name: "See Me Now", file: "" },
-  { name: "chain Heavy", file: "" },
-  { name: "Mamma's Boyfriend", file: "" }
+  { name: "Dark Fantasy", file: "tracks/darkfantasy.mp3" },
+  { name: "Gorgeous", file: "tracks/gorgeous.mp3" },
+  { name: "POWER", file: "tracks/power.mp3" },
+  { name: "All of the lights (interlude)", file: "tracks/aotli.mp3" },
+  { name: "All of the lights (ft. Rihanna)", file: "tracks/aotl.mp3" },
+  { name: "Monster", file: "tracks/monster.mp3" },
+  { name: "So Appalled", file: "tracks/soappalled.mp3" },
+  { name: "Devil in a new dress (ft. Rick Ross)", file: "tracks/diand.mp3" },
+  { name: "Runaway", file: "tracks/runaway.mp3" },
+  { name: "Hell of a life", file: "tracks/hoal.mp3" },
+  { name: "Blame Game", file: "tracks/blamegame.mp3" },
+  { name: "Lost in the World", file: "tracks/litw.mp3" },
+  { name: "Who will Survive in America", file: "tracks/wwsia.mp3" },
+  { name: "See Me Now", file: "tracks/see-me-now.mp3" },
+  { name: "chain Heavy", file: "tracks/chain-heavy.mp3" },
+  { name: "Mamma's Boyfriend", file: "tracks/mammas-boyfriend.mp3" }
 ];
 
 /* Load a track */
