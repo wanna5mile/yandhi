@@ -1,4 +1,6 @@
-/* DOM references */
+/* =========================
+   DOM REFERENCES
+========================= */
 const now_playing = document.querySelector('.now-playing');
 const playpause_btn = document.querySelector('.playpause-track');
 const next_btn = document.querySelector('.next-track');
@@ -7,13 +9,19 @@ const shuffle_btn = document.querySelector('.shuffle-track');
 const repeat_btn = document.querySelector('.repeat-track');
 
 const curr_track = new Audio();
+curr_track.preload = "auto";
 
+/* =========================
+   STATE
+========================= */
 let track_index = 0;
 let isPlaying = false;
 let isShuffle = false;
 let repeatMode = 0; // 0 = off, 1 = repeat one, 2 = repeat all
 
-/* Playlist */
+/* =========================
+   PLAYLIST
+========================= */
 const music_list = [
   { name: "Dark Fantasy", file: "tracks/darkfantasy.mp3" },
   { name: "Gorgeous", file: "tracks/gorgeous.mp3" },
@@ -33,7 +41,16 @@ const music_list = [
   { name: "Mamma's Boyfriend", file: "tracks/mammas-boyfriend.mp3" }
 ];
 
-/* Load Track */
+/* =========================
+   CORE FUNCTIONS
+========================= */
+
+function updateUI() {
+  playpause_btn.innerHTML = isPlaying
+    ? '<i class="fa fa-pause-circle fa-5x"></i>'
+    : '<i class="fa fa-play-circle fa-5x"></i>';
+}
+
 function loadTrack(index) {
   track_index = (index + music_list.length) % music_list.length;
   curr_track.src = music_list[track_index].file;
@@ -41,62 +58,88 @@ function loadTrack(index) {
   now_playing.textContent = music_list[track_index].name.toUpperCase();
 }
 
-/* Play / Pause */
+/* Safe track changer */
+function changeTrack(index) {
+  const wasPlaying = isPlaying;
+
+  loadTrack(index);
+
+  if (wasPlaying) {
+    curr_track.addEventListener('canplay', function autoPlay() {
+      curr_track.play().catch(() => {});
+      curr_track.removeEventListener('canplay', autoPlay);
+    });
+  }
+}
+
+/* =========================
+   PLAYBACK CONTROL
+========================= */
+
 function playTrack() {
-  curr_track.play();
-  isPlaying = true;
-  playpause_btn.innerHTML = '<i class="fa fa-pause-circle fa-5x"></i>';
+  curr_track.play().catch(() => {});
 }
 
 function pauseTrack() {
   curr_track.pause();
-  isPlaying = false;
-  playpause_btn.innerHTML = '<i class="fa fa-play-circle fa-5x"></i>';
 }
 
 function playpauseTrack() {
   isPlaying ? pauseTrack() : playTrack();
 }
 
-/* Next Track */
+/* =========================
+   TRACK NAVIGATION
+========================= */
+
 function nextTrack() {
   if (isShuffle) {
     let randomIndex;
     do {
       randomIndex = Math.floor(Math.random() * music_list.length);
     } while (randomIndex === track_index);
-    track_index = randomIndex;
+    changeTrack(randomIndex);
   } else {
-    track_index++;
+    changeTrack(track_index + 1);
   }
-
-  loadTrack(track_index);
-  playTrack();
 }
 
-/* Previous Track */
 function prevTrack() {
-  track_index--;
-  loadTrack(track_index);
-  playTrack();
+  changeTrack(track_index - 1);
 }
 
-/* Shuffle */
+/* =========================
+   SHUFFLE & REPEAT
+========================= */
+
 function toggleShuffle() {
   isShuffle = !isShuffle;
   shuffle_btn.classList.toggle('active', isShuffle);
 }
 
-/* Repeat */
 function toggleRepeat() {
   repeatMode = (repeatMode + 1) % 3;
 
-  if (repeatMode === 0) repeat_btn.textContent = "Repeat Off";
-  if (repeatMode === 1) repeat_btn.textContent = "Repeat One";
-  if (repeatMode === 2) repeat_btn.textContent = "Repeat All";
+  repeat_btn.textContent =
+    repeatMode === 0 ? "Repeat Off" :
+    repeatMode === 1 ? "Repeat One" :
+    "Repeat All";
 }
 
-/* Track End */
+/* =========================
+   AUDIO EVENTS (TRUTH SOURCE)
+========================= */
+
+curr_track.addEventListener('play', () => {
+  isPlaying = true;
+  updateUI();
+});
+
+curr_track.addEventListener('pause', () => {
+  isPlaying = false;
+  updateUI();
+});
+
 curr_track.addEventListener('ended', () => {
   if (repeatMode === 1) {
     playTrack();
@@ -107,13 +150,19 @@ curr_track.addEventListener('ended', () => {
   }
 });
 
-/* Event Listeners */
+/* =========================
+   EVENT LISTENERS
+========================= */
+
 playpause_btn.addEventListener('click', playpauseTrack);
 next_btn.addEventListener('click', nextTrack);
 prev_btn.addEventListener('click', prevTrack);
 shuffle_btn?.addEventListener('click', toggleShuffle);
 repeat_btn?.addEventListener('click', toggleRepeat);
 
-/* Init */
+/* =========================
+   INIT
+========================= */
+
 loadTrack(0);
-pauseTrack();
+updateUI();
