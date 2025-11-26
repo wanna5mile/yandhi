@@ -44,7 +44,6 @@ const music_list = [
 /* =========================
    CORE FUNCTIONS
 ========================= */
-
 function updateUI() {
   playpause_btn.innerHTML = isPlaying
     ? '<i class="fa fa-pause-circle fa-5x"></i>'
@@ -58,10 +57,9 @@ function loadTrack(index) {
   now_playing.textContent = music_list[track_index].name.toUpperCase();
 }
 
-/* Safe track changer */
+/* Safe track changer: only auto-play if previously playing */
 function changeTrack(index) {
   const wasPlaying = isPlaying;
-
   loadTrack(index);
 
   if (wasPlaying) {
@@ -75,23 +73,13 @@ function changeTrack(index) {
 /* =========================
    PLAYBACK CONTROL
 ========================= */
-
-function playTrack() {
-  curr_track.play().catch(() => {});
-}
-
-function pauseTrack() {
-  curr_track.pause();
-}
-
-function playpauseTrack() {
-  isPlaying ? pauseTrack() : playTrack();
-}
+function playTrack() { curr_track.play().catch(() => {}); }
+function pauseTrack() { curr_track.pause(); }
+function playpauseTrack() { isPlaying ? pauseTrack() : playTrack(); }
 
 /* =========================
    TRACK NAVIGATION
 ========================= */
-
 function nextTrack() {
   if (isShuffle) {
     let randomIndex;
@@ -104,14 +92,11 @@ function nextTrack() {
   }
 }
 
-function prevTrack() {
-  changeTrack(track_index - 1);
-}
+function prevTrack() { changeTrack(track_index - 1); }
 
 /* =========================
    SHUFFLE & REPEAT
 ========================= */
-
 function toggleShuffle() {
   isShuffle = !isShuffle;
   shuffle_btn.classList.toggle('active', isShuffle);
@@ -119,7 +104,6 @@ function toggleShuffle() {
 
 function toggleRepeat() {
   repeatMode = (repeatMode + 1) % 3;
-
   repeat_btn.textContent =
     repeatMode === 0 ? "Repeat Off" :
     repeatMode === 1 ? "Repeat One" :
@@ -129,7 +113,6 @@ function toggleRepeat() {
 /* =========================
    AUDIO EVENTS (TRUTH SOURCE)
 ========================= */
-
 curr_track.addEventListener('play', () => {
   isPlaying = true;
   updateUI();
@@ -140,20 +123,21 @@ curr_track.addEventListener('pause', () => {
   updateUI();
 });
 
+/* Robust track-ended handler */
 curr_track.addEventListener('ended', () => {
-  if (repeatMode === 1) {
-    playTrack();
-  } else if (repeatMode === 2) {
-    nextTrack();
-  } else {
-    pauseTrack();
-  }
+  // Repeat one
+  if (repeatMode === 1) { playTrack(); return; }
+
+  // Repeat all or normal progression
+  if (repeatMode === 2 || track_index < music_list.length - 1) { nextTrack(); return; }
+
+  // End of playlist
+  pauseTrack();
 });
 
 /* =========================
    EVENT LISTENERS
 ========================= */
-
 playpause_btn.addEventListener('click', playpauseTrack);
 next_btn.addEventListener('click', nextTrack);
 prev_btn.addEventListener('click', prevTrack);
@@ -163,6 +147,5 @@ repeat_btn?.addEventListener('click', toggleRepeat);
 /* =========================
    INIT
 ========================= */
-
 loadTrack(0);
 updateUI();
