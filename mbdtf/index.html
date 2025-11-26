@@ -2,8 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Mbdtf Music Player</title>
-    <link rel="icon" href="disc.png" type="image/png">
+    <title>Yandhi Music Player</title>
+    <link rel="icon" href="images/disc.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
       html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
@@ -45,6 +45,7 @@
   <body>
     <canvas id="renderCanvas"></canvas>
 
+    <div class="player-controls">
 <div class="player-controls">
   <button class="random-track" id="shuffleBtn">
     <i class="fas fa-random fa-2x"></i>
@@ -66,390 +67,334 @@
     <i class="fas fa-redo fa-2x"></i>
   </button>
 </div>
+    </div>
 
 <audio id="audio" preload="auto"></audio>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 
 <!--EVENTS AND BUILD HERE DAWG -->
 <script>
-// babylon-hook.js
-// Babylon visuals only — hooks into mbdtf-player.js (doesn't control playback)
+// ✅ SINGLE-FILE WORKING MUSIC PLAYER (RESTORED + MERGED + STABLE)
+// Drop this in event.js and REMOVE other JS imports
 
 window.addEventListener("DOMContentLoaded", () => {
-  const waitForReady = setInterval(() => {
-    // Wait until BABYLON is available and at least the play button exists.
-    // We don't force the music player to exist yet — we'll wait for the audio source below.
+
+  const waitForBabylon = setInterval(() => {
     if (!window.BABYLON) return;
+    clearInterval(waitForBabylon);
+    
+
+    // ================= AUDIO SETUP =================
+    const canvas = document.getElementById("renderCanvas");
+    const audio = document.getElementById("audio");
+
+    const playlist = ["./assets/music/byebyebaby.mp3"];
+    let currentIndex = 0;
+    let isPlaying = false;
+
+    audio.src = playlist[currentIndex];
+
+    // ================= BUTTONS =================
     const playBtn = document.getElementById("playBtn");
-    if (!playBtn) return;
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const shuffleBtn = document.getElementById("shuffleBtn");
+    const repeatBtn = document.getElementById("repeatBtn");
+    const playIcon = playBtn.querySelector("i");
 
-    clearInterval(waitForReady);
+    let shuffle = false;
+    let repeat = false;
 
-    // ---- Wait for the audio source (prefers window.curr_track created by mbdtf-player.js,
-    //      falls back to the <audio id="audio"> element if present). We'll poll briefly
-    //      so the deferred mbdtf-player.js can run first.
-    let audioSource = null;
-    const waitForAudio = setInterval(() => {
-      // Prefer the global curr_track (mbdtf-player uses `const curr_track = new Audio();`)
-      // Some setups may not expose it as window.curr_track; attempt to find it on window.
-      if (window.curr_track && typeof window.curr_track.play === "function") {
-        audioSource = window.curr_track;
+    // ================= BABYLON ENGINE =================
+    const engine = new BABYLON.Engine(canvas, true);
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+
+    const camera = new BABYLON.ArcRotateCamera(
+      "camera",
+      Math.PI / 2,
+      Math.PI / 2.5,
+      8,
+      BABYLON.Vector3.Zero(),
+      scene
+    );
+    camera.attachControl(canvas, true);
+
+    // Lighting
+    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+    hemiLight.intensity = 0.4;
+
+    const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.5, -1, -0.5), scene);
+    dirLight.position = new BABYLON.Vector3(5, 8, 5);
+    dirLight.intensity = 1.2;
+
+    const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 2, -3), scene);
+    pointLight.intensity = 0.6;
+
+    // ================= DISC =================
+    const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
+      height: 0.05,
+      diameter: 3,
+      tessellation: 96
+    }, scene);
+
+    discBody.position.x = 0;
+    discBody.position.z = -0.2;
+
+    const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
+      height: 0.06,
+      diameter: 0.1,
+      tessellation: 64
+    }, scene);
+
+    hole.position.x = 0;
+    hole.position.z = -0.2;
+
+    const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
+    const disc = discCSG.toMesh("disc", null, scene);
+
+    discBody.dispose();
+    hole.dispose();
+
+    disc.rotation.x = Math.PI / 2;
+
+    const discMat = new BABYLON.PBRMaterial("discMat", scene);
+    discMat.albedoTexture = new BABYLON.Texture("images/disc.png", scene);
+    discMat.backFaceCulling = true;
+    discMat.metallic = 0.4;
+    discMat.roughness = 0.25;
+    discMat.clearCoat.isEnabled = true;
+    discMat.clearCoat.intensity = 0.8;
+    disc.material = discMat;
+
+// ---------------- GLOBAL HELPER: create a StandardMaterial that respects PNG alpha ----------------
+function makeStandardTextureMaterial(name, url, scene, opts = {}) {
+  const mat = new BABYLON.StandardMaterial(name, scene);
+
+  const tex = new BABYLON.Texture(url, scene);
+  tex.hasAlpha = true;
+
+  mat.diffuseTexture = tex;
+
+  mat.diffuseColor = new BABYLON.Color3(1, 1, 1);
+  mat.useAlphaFromDiffuseTexture = true;
+  mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+  mat.backFaceCulling = true;
+
+  // Optional lighting tweaks
+  // mat.specularColor = new BABYLON.Color3(0,0,0);
+  // mat.emissiveColor = new BABYLON.Color3(1,1,1);
+
+  // ---------------- OVERRIDE CONTROLS ----------------
+  if (opts.uScale !== undefined) tex.uScale = opts.uScale;
+  if (opts.vScale !== undefined) tex.vScale = opts.vScale;
+  if (opts.uOffset !== undefined) tex.uOffset = opts.uOffset;
+  if (opts.vOffset !== undefined) tex.vOffset = opts.vOffset;
+
+  if (opts.wAng !== undefined) {
+    tex.uRotationCenter = 0.5;
+    tex.vRotationCenter = 0.5;
+    tex.wAng = opts.wAng;
+  }
+
+  // Horizontal mirror helper (optional)
+  if (opts.uScaleMirror) {
+    tex.uScale = -Math.abs(tex.uScale || 1);
+    tex.uOffset = 1;
+  }
+
+  return mat;
+}
+
+
+
+// ================= EIGHTY =================
+const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
+  width: 0.8,
+  height: 0.8,
+  depth: 0.05,
+  faceUV: [
+    new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
+    new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+  ]
+}, scene);
+
+eighty.position.set(-1.5, 1.5, -0.2);
+
+// Apply texture to front and back
+const eightyMat = makeStandardTextureMaterial("eightyMat", "images/80fix.png", scene);
+eighty.material = eightyMat;
+
+
+// ================= INSERT =================
+const insert = BABYLON.MeshBuilder.CreateBox("insert", {
+  width: 0.5,
+  height: 1.2,
+  depth: 0.05,
+faceUV: [
+    new BABYLON.Vector4(1, 0, 0, 1), // front (normal)
+    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+]
+}, scene);
+
+insert.position.set(1.8, 1.4, -0.2);
+
+// Apply texture to front and back
+const insertMat = makeStandardTextureMaterial("insertMat", "images/insertfix.png", scene);
+insert.material = insertMat;
+
+// ================= MINIDISC =================
+const minidiscSize = 0.8;   // width & height
+const minidiscDepth = 0.02; // distance between front and back
+
+// Function to create a single minidisc face
+function createMinidiscFace(name, textureURL, scene) {
+    const plane = BABYLON.MeshBuilder.CreatePlane(name, {
+        width: minidiscSize,
+        height: minidiscSize
+    }, scene);
+
+    const mat = makeStandardTextureMaterial(`${name}Mat`, textureURL, scene);
+    plane.material = mat;
+
+    return plane;
+}
+
+// Create front and back as separate planes
+const frontMinidisc = createMinidiscFace("frontMinidisc", "images/minidiscfix.png", scene);
+frontMinidisc.position.set(0, -1.2, -0.25); // position inside cover
+
+const backMinidisc = createMinidiscFace("backMinidisc", "images/minidiscfix.png", scene);
+backMinidisc.position.set(0, -1.2, -0.12 + minidiscDepth); // slightly behind front
+backMinidisc.rotation.y = Math.PI; // flip to face opposite direction
+
+// ================= CASE + TAPE =================
+const tape = BABYLON.MeshBuilder.CreateBox("tape", {
+  width: 1.4,
+  height: 4 / 3,
+  depth: 0.2
+}, scene);
+
+tape.position.set(-1.4, 0, -0.2);
+
+const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
+  width: 4,
+  height: 4,
+  depth: 0.15
+}, scene);
+
+// Glass material for case
+const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
+glassMat.alpha = 0.25;
+glassMat.indexOfRefraction = 1.5;
+glassMat.roughness = 0.05;
+caseBox.material = glassMat;
+caseBox.position.z = -0.2;
+
+
+// ================= TAPE MATERIAL =================
+const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
+tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
+tapeMat.backFaceCulling = true;
+tape.material = tapeMat;
+
+    // ================= AUDIO ANALYSER =================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    const src = audioCtx.createMediaElementSource(audio);
+    src.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    // ================= CONTROLS =================
+    playBtn.onclick = () => {
+      audioCtx.resume();
+
+      if (!isPlaying) {
+        audio.play();
+        isPlaying = true;
+        playIcon.classList.replace("fa-play-circle", "fa-pause-circle");
       } else {
-        const domAudio = document.getElementById("audio");
-        if (domAudio) audioSource = domAudio;
+        audio.pause();
+        isPlaying = false;
+        playIcon.classList.replace("fa-pause-circle", "fa-play-circle");
       }
+    };
 
-      if (!audioSource) return;
-      clearInterval(waitForAudio);
-      initBabylonHook(audioSource);
-    }, 30);
+    nextBtn.onclick = () => {
+      currentIndex = shuffle
+        ? Math.floor(Math.random() * playlist.length)
+        : (currentIndex + 1) % playlist.length;
 
-    // Safety: after some time, if audio not found, still init but without analyser (visuals limited)
-    setTimeout(() => {
-      if (!audioSource) {
-        console.warn("Babylon hook: audio source not found. Initialising visuals without analyser.");
-        initBabylonHook(null);
-        clearInterval(waitForAudio);
+      audio.src = playlist[currentIndex];
+      audio.play();
+      isPlaying = true;
+    };
+
+    prevBtn.onclick = () => {
+      currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+      audio.src = playlist[currentIndex];
+      audio.play();
+      isPlaying = true;
+    };
+
+    shuffleBtn.onclick = () => {
+      shuffle = !shuffle;
+      shuffleBtn.classList.toggle("active", shuffle);
+    };
+
+    repeatBtn.onclick = () => {
+      repeat = !repeat;
+      repeatBtn.classList.toggle("active", repeat);
+      audio.loop = repeat;
+    };
+
+    audio.addEventListener("ended", () => {
+      if (!repeat) nextBtn.onclick();
+    });
+
+    // ================= RENDER LOOP =================
+    engine.runRenderLoop(() => {
+      if (isPlaying) {
+        analyser.getByteFrequencyData(dataArray);
+        const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
+        disc.rotate(BABYLON.Axis.Y, 0.03 + avg * 0.0003, BABYLON.Space.LOCAL);
       }
-    }, 3000);
+      scene.render();
+    });
 
-    // -----------------------
-    function initBabylonHook(audio) {
-      // BUTTONS
-      const playBtn = document.getElementById("playBtn");
-      const nextBtn = document.getElementById("nextBtn");
-      const prevBtn = document.getElementById("prevBtn");
-      const shuffleBtn = document.getElementById("shuffleBtn");
-      const repeatBtn = document.getElementById("repeatBtn");
-      const playIcon = playBtn?.querySelector("i");
+    window.addEventListener("resize", () => engine.resize());
 
-      // Keep local flags only for visuals (do not try to be source of truth)
-      let localSpinning = false;
-      let spinObservable = null;
-
-      // BABYLON ENGINE
-      const canvas = document.getElementById("renderCanvas");
-      const engine = new BABYLON.Engine(canvas, true);
-      const scene = new BABYLON.Scene(engine);
-      scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-
-      const camera = new BABYLON.ArcRotateCamera(
-        "camera",
-        Math.PI / 2,
-        Math.PI / 2.5,
-        8,
-        BABYLON.Vector3.Zero(),
-        scene
-      );
-      camera.attachControl(canvas, true);
-
-      // lighting
-      const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-      hemiLight.intensity = 0.4;
-      const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.5, -1, -0.5), scene);
-      dirLight.position = new BABYLON.Vector3(5, 8, 5);
-      dirLight.intensity = 1.2;
-      const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 2, -3), scene);
-      pointLight.intensity = 0.6;
-
-      // ================= DISC (CSG) =================
-      const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
-        height: 0.05,
-        diameter: 3,
-        tessellation: 96
-      }, scene);
-
-      discBody.position.x = -2;
-      discBody.position.z = -0.2;
-
-      const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
-        height: 0.06,
-        diameter: 0.1,
-        tessellation: 64
-      }, scene);
-
-      hole.position.x = 0;
-      hole.position.z = -0.2;
-
-      const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
-      const disc = discCSG.toMesh("disc", null, scene);
-
-      // Copy transforms then dispose helpers (keeps your original approach)
-      disc.position.copyFrom(discBody.position);
-      disc.rotation.copyFrom(discBody.rotation || BABYLON.Vector3.Zero());
-      discBody.dispose();
-      hole.dispose();
-
-      disc.rotation.x = Math.PI / 2;
-
-      const discMat = new BABYLON.PBRMaterial("discMat", scene);
-      discMat.albedoTexture = new BABYLON.Texture("https://images.rawpixel.com/image_png_social_square/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvam9iNjgxLTAwNDUtcC1sMWxnZ2hpbi5wbmc.png", scene);
-      discMat.backFaceCulling = true;
-      discMat.metallic = 0.4;
-      discMat.roughness = 0.25;
-      discMat.clearCoat.isEnabled = true;
-      discMat.clearCoat.intensity = 0.8;
-      disc.material = discMat;
-
-      // ================= slide + spin logic (kept as in your file, but wired safely) =================
-      function slideAndSpinDisc() {
-        // Prevent multiple invocations
-        if (localSpinning || (scene.getAnimationGroupByName && scene.getAnimationGroupByName("discSlideGroup"))) {
-          return;
-        }
-
-        // SLIDE animation: position.x from current to 2
-        const slideAnim = new BABYLON.Animation(
-          "discSlide",
-          "position.x",
-          60,
-          BABYLON.Animation.ANIMATIONTYPE_FLOAT,
-          BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
-        );
-
-        const startX = disc.position.x;
-        slideAnim.setKeys([
-          { frame: 0, value: startX },
-          { frame: 30, value: 2 }
-        ]);
-
-        const ease = new BABYLON.CubicEase();
-        ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEOUT);
-        slideAnim.setEasingFunction(ease);
-
-        disc.animations = [slideAnim];
-
-        scene.beginAnimation(disc, 0, 30, false, 1, () => {
-          // when slide completed -> start spinning observable
-          if (spinObservable) {
-            try { scene.onBeforeRenderObservable.removeCallback(spinObservable); } catch (e) {}
-            spinObservable = null;
-          }
-
-          localSpinning = true;
-
-          spinObservable = function() {
-            try {
-              if (analyser && dataArray) {
-                analyser.getByteFrequencyData(dataArray);
-                const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-                const speed = 0.08 + avg * 0.0006;
-                disc.rotation.z += speed;
-              } else {
-                disc.rotation.z += 0.12;
-              }
-            } catch (e) {
-              disc.rotation.z += 0.12;
-            }
-          };
-
-          scene.onBeforeRenderObservable.add(spinObservable);
-        });
-      }
-
-      // Safely stop spin (remove observable) — this is visual only
-      function stopSpinVisual() {
-        if (spinObservable) {
-          try { scene.onBeforeRenderObservable.removeCallback(spinObservable); } catch (e) {}
-          spinObservable = null;
-        }
-        localSpinning = false;
-      }
-
-      // ================= helper material function (kept) =================
-      function makeStandardTextureMaterial(name, url, scene, opts = {}) {
-        const mat = new BABYLON.StandardMaterial(name, scene);
-        const tex = new BABYLON.Texture(url, scene);
-        tex.hasAlpha = true;
-        mat.diffuseTexture = tex;
-        mat.diffuseColor = new BABYLON.Color3(1, 1, 1);
-        mat.useAlphaFromDiffuseTexture = true;
-        mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-        mat.backFaceCulling = true;
-
-        if (opts.uScale !== undefined) tex.uScale = opts.uScale;
-        if (opts.vScale !== undefined) tex.vScale = opts.vScale;
-        if (opts.uOffset !== undefined) tex.uOffset = opts.uOffset;
-        if (opts.vOffset !== undefined) tex.vOffset = opts.vOffset;
-
-        if (opts.wAng !== undefined) {
-          tex.uRotationCenter = 0.5;
-          tex.vRotationCenter = 0.5;
-          tex.wAng = opts.wAng;
-        }
-
-        if (opts.uScaleMirror) {
-          tex.uScale = -Math.abs(tex.uScale || 1);
-          tex.uOffset = 1;
-        }
-
-        return mat;
-      }
-
-      // ================= case + cover (kept) =================
-      const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
-        width: 4,
-        height: 4,
-        depth: 0.15
-      }, scene);
-
-      const caseMat = new BABYLON.StandardMaterial("caseMat", scene);
-      caseMat.diffuseColor = new BABYLON.Color3(1, 0.18, 0.3);
-      caseMat.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-
-      caseBox.material = caseMat;
-      caseBox.position.z = -0.2;
-
-      const caseCover = BABYLON.MeshBuilder.CreateBox("case-cover", {
-        width: 4,
-        height: 4,
-        depth: 0.05,
-        faceUV: [
-          new BABYLON.Vector4(1, 1, 0, 0),
-          new BABYLON.Vector4(1, 1, 0, 0),
-          new BABYLON.Vector4(0, 0, 0, 0),
-          new BABYLON.Vector4(0, 0, 0, 0),
-          new BABYLON.Vector4(0, 0, 0, 0),
-          new BABYLON.Vector4(0, 0, 0, 0)
-        ]
-      }, scene);
-
-      caseCover.position.set(0, 0, caseBox.position.z + 0.3);
-      caseCover.parent = caseBox;
-
-      const coverMat = makeStandardTextureMaterial("coverMat", "../mbdtf/cover/mbdtf.png", scene);
-      caseCover.material = coverMat;
-
-      // ================= AUDIO ANALYSER (optional) =================
-      // If an audio source is provided, connect analyser to it. If not, visuals still work
-      // (just without frequency-driven spin).
-      let audioCtx = null;
-      let analyser = null;
-      let dataArray = null;
-
-      if (audio) {
-        try {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          analyser = audioCtx.createAnalyser();
-
-          // createMediaElementSource requires a media element — window.curr_track is an HTMLAudioElement
-          const srcNode = audioCtx.createMediaElementSource(audio);
-          srcNode.connect(analyser);
-          analyser.connect(audioCtx.destination);
-
-          dataArray = new Uint8Array(analyser.frequencyBinCount);
-        } catch (e) {
-          // If creating analyser/source failed (same-origin or other), we continue without it.
-          console.warn("Babylon hook: could not create analyser. Continuing without frequency data.", e);
-          audioCtx = null;
-          analyser = null;
-          dataArray = null;
-        }
-      }
-
-      // ================= BUTTON HOOKS (addEventListener only — do not override player logic) =================
-      // We listen for the audio's own events (play/pause) to trigger visuals, rather than controlling audio.
-
-      if (audio) {
-        // Ensure user gesture/resume works: when play is triggered by the player, resume audioContext
-        audio.addEventListener("play", () => {
-          if (audioCtx && audioCtx.state === "suspended") {
-            audioCtx.resume().catch(() => {});
-          }
-          // play event means audio is playing -> slide and spin
-          slideAndSpinDisc();
-          // update play icon visually to reflect state; mbdtf-player already updates button icon,
-          // but keeping visual sync here is harmless if present
-          try { playIcon.classList.replace("fa-play-circle", "fa-pause-circle"); } catch (e) {}
-        });
-
-        audio.addEventListener("pause", () => {
-          // pause -> stop spinning visually (slide back if desired)
-          stopSpinVisual();
-          // optional slide back animation: bring disc back to original X
-          // We'll create a simple animation to return disc to -2 (your original start)
-          const slideBack = new BABYLON.Animation(
-            "discSlideBack",
-            "position.x",
-            60,
-            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
-            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
-          );
-          slideBack.setKeys([
-            { frame: 0, value: disc.position.x },
-            { frame: 20, value: -2 } // return to the left
-          ]);
-          const easeBack = new BABYLON.CubicEase();
-          easeBack.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEOUT);
-          slideBack.setEasingFunction(easeBack);
-          disc.animations = [slideBack];
-          scene.beginAnimation(disc, 0, 20, false, 1, () => {});
-          try { playIcon.classList.replace("fa-pause-circle", "fa-play-circle"); } catch (e) {}
-        });
-
-        audio.addEventListener("ended", () => {
-          // ensure visuals stop when track ends
-          stopSpinVisual();
-        });
-      } else {
-        // If we don't have an audio source we still wire the buttons to visual feedback
-        // but do not control playback.
-        console.info("Babylon hook: no audio source — buttons will only trigger visuals.");
-      }
-
-      // Hook into button clicks for visual feedback only (do not change audio state)
-      playBtn.addEventListener("click", () => {
-        // player will handle play/pause; we do nothing here except optionally start a small visual
-        // If audio exists and is playing, audio's 'play' handler above will run slideAndSpinDisc.
-        // If no audio present, toggle a tiny pulse so user sees something:
-        if (!audio) {
-          // quick pulse animation
-          const anim = new BABYLON.Animation("pulse", "scaling.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-          anim.setKeys([{frame:0, value:1},{frame:10,value:1.05},{frame:20,value:1}]);
-          caseBox.animations = [anim];
-          scene.beginAnimation(caseBox,0,20,false,1);
-        }
-      });
-
-      nextBtn?.addEventListener("click", () => {
-        // small visual cue for next
-        // rotate the disc a small amount to indicate skip
-        disc.rotate(BABYLON.Axis.Z, 0.6, BABYLON.Space.LOCAL);
-      });
-
-      prevBtn?.addEventListener("click", () => {
-        disc.rotate(BABYLON.Axis.Z, -0.6, BABYLON.Space.LOCAL);
-      });
-
-      shuffleBtn?.addEventListener("click", () => {
-        // visual toggle for shuffle: pulse the button (no logic change)
-        shuffleBtn.classList.toggle("active");
-        const anim = new BABYLON.Animation("shufflePulse", "scaling.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-        anim.setKeys([{frame:0,value:1},{frame:8,value:1.1},{frame:16,value:1}]);
-        caseBox.animations = [anim];
-        scene.beginAnimation(caseBox,0,16,false,1);
-      });
-
-      repeatBtn?.addEventListener("click", () => {
-        // visual toggle for repeat
-        repeatBtn.classList.toggle("active");
-      });
-
-      // ================= RENDER LOOP (single) =================
-      engine.runRenderLoop(() => {
-        // If no analyser, disc can still spin slowly if localSpinning true.
-        if (!analyser && localSpinning) {
-          disc.rotation.z += 0.04;
-        }
-        scene.render();
-      });
-
-      window.addEventListener("resize", () => engine.resize());
-    } // end initBabylonHook
   }, 10);
+
+});
+</script>
+    
+<script type="module">
+import { initMusicPlayer } from './yandhi-player.js';
+
+window.addEventListener("DOMContentLoaded", () => {
+    const audio = document.getElementById("audio");
+    initMusicPlayer({
+        audio: audio,
+        playBtn: document.getElementById("playBtn"),
+        nextBtn: document.getElementById("nextBtn"),
+        prevBtn: document.getElementById("prevBtn"),
+        shuffleBtn: document.getElementById("shuffleBtn"),
+        repeatBtn: document.getElementById("repeatBtn")
+    });
 });
 </script>
 
-  <script src="mbdtf-player.js" defer></script>
+<script src="yandhi-player.js" defer></script>
   </body>
 </html>
