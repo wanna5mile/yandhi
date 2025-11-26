@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Yandhi Music Player</title>
+    <title>Mbdtf Music Player</title>
     <link rel="icon" href="disc.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -45,7 +45,6 @@
   <body>
     <canvas id="renderCanvas"></canvas>
 
-    <div class="player-controls">
 <div class="player-controls">
   <button class="random-track" id="shuffleBtn">
     <i class="fas fa-random fa-2x"></i>
@@ -67,32 +66,17 @@
     <i class="fas fa-redo fa-2x"></i>
   </button>
 </div>
-    </div>
 
 <audio id="audio" preload="auto"></audio>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 
 <!--EVENTS AND BUILD HERE DAWG -->
 <script>
-// ✅ SINGLE-FILE WORKING MUSIC PLAYER (RESTORED + MERGED + STABLE)
-// Drop this in event.js and REMOVE other JS imports
-
 window.addEventListener("DOMContentLoaded", () => {
 
   const waitForBabylon = setInterval(() => {
     if (!window.BABYLON) return;
     clearInterval(waitForBabylon);
-    
-
-    // ================= AUDIO SETUP =================
-    const canvas = document.getElementById("renderCanvas");
-    const audio = document.getElementById("audio");
-
-    const playlist = ["./assets/music/byebyebaby.mp3"];
-    let currentIndex = 0;
-    let isPlaying = false;
-
-    audio.src = playlist[currentIndex];
 
     // ================= BUTTONS =================
     const playBtn = document.getElementById("playBtn");
@@ -236,30 +220,6 @@ function slideAndSpinDisc() {
     scene.onBeforeRenderObservable.add(spinObservable);
   });
 }
-
-
-// ================= PLAY BUTTON (call slide on play) =================
-
-playBtn.onclick = () => {
-  audioCtx.resume();
-
-  if (!isPlaying) {
-    audio.play();
-    isPlaying = true;
-    playIcon.classList.replace("fa-play-circle", "fa-pause-circle");
-
-    slideDisc(2, () => startSpin());
-
-  } else {
-    audio.pause();
-    isPlaying = false;
-    playIcon.classList.replace("fa-pause-circle", "fa-play-circle");
-
-    stopSpin();
-    slideDisc(0);
-  }
-};
-
 
 // ================= RENDER LOOP (remove direct disc.rotate) =================
 
@@ -426,6 +386,6 @@ caseCover.material = coverMat;
 });
 </script>
 
-  <script src="yandhi-player.js" defer></script>
+  <script src="mbdtf-player.js" defer></script>
   </body>
 </html>
