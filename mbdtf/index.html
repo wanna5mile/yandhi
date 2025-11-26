@@ -131,41 +131,104 @@ window.addEventListener("DOMContentLoaded", () => {
     const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 2, -3), scene);
     pointLight.intensity = 0.6;
 
-    // ================= DISC =================
-    const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
-      height: 0.05,
-      diameter: 3,
-      tessellation: 96
-    }, scene);
+// ================= DISC =================
+const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
+  height: 0.05,
+  diameter: 3,
+  tessellation: 96
+}, scene);
 
-    discBody.position.x = 0;
-    discBody.position.z = -0.2;
+discBody.position.x = 0;
+discBody.position.z = -0.2;
 
-    const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
-      height: 0.06,
-      diameter: 0.1,
-      tessellation: 64
-    }, scene);
+const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
+  height: 0.06,
+  diameter: 0.1,
+  tessellation: 64
+}, scene);
 
-    hole.position.x = 0;
-    hole.position.z = -0.2;
+hole.position.x = 0;
+hole.position.z = -0.2;
 
-    const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
-    const disc = discCSG.toMesh("disc", null, scene);
+const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
+const disc = discCSG.toMesh("disc", null, scene);
 
-    discBody.dispose();
-    hole.dispose();
+discBody.dispose();
+hole.dispose();
 
-    disc.rotation.x = Math.PI / 2;
+disc.rotation.x = Math.PI / 2;
 
-    const discMat = new BABYLON.PBRMaterial("discMat", scene);
-    discMat.albedoTexture = new BABYLON.Texture("images/disc.png", scene);
-    discMat.backFaceCulling = true;
-    discMat.metallic = 0.4;
-    discMat.roughness = 0.25;
-    discMat.clearCoat.isEnabled = true;
-    discMat.clearCoat.intensity = 0.8;
-    disc.material = discMat;
+// ================= MATERIAL =================
+const discMat = new BABYLON.PBRMaterial("discMat", scene);
+discMat.albedoTexture = new BABYLON.Texture("images/disc.png", scene);
+discMat.backFaceCulling = true;
+discMat.metallic = 0.4;
+discMat.roughness = 0.25;
+discMat.clearCoat.isEnabled = true;
+discMat.clearCoat.intensity = 0.8;
+disc.material = discMat;
+
+// ================= SLIDE ANIMATION FUNCTION =================
+function slideDisc(targetX) {
+  const animation = new BABYLON.Animation(
+    "discSlide",
+    "position.x",
+    60,
+    BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+  );
+
+  const keys = [
+    { frame: 0, value: disc.position.x },
+    { frame: 30, value: targetX }
+  ];
+
+  animation.setKeys(keys);
+
+  const easing = new BABYLON.CubicEase();
+  easing.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+  animation.setEasingFunction(easing);
+
+  disc.animations = [];
+  disc.animations.push(animation);
+
+  scene.beginAnimation(disc, 0, 30, false);
+}
+
+// ================= ROTATION CONTROL =================
+let discSpinObserver = null;
+
+function startDiscSpin() {
+  if (discSpinObserver) return;
+  discSpinObserver = scene.onBeforeRenderObservable.add(() => {
+    disc.rotation.z += 0.05;
+  });
+}
+
+function stopDiscSpin() {
+  if (discSpinObserver) {
+    scene.onBeforeRenderObservable.remove(discSpinObserver);
+    discSpinObserver = null;
+  }
+}
+
+// ================= AUDIO HOOKS =================
+// These sync perfectly with your music system
+
+curr_track.addEventListener('play', () => {
+  slideDisc(-2);     // slide OUT
+  startDiscSpin();   // start spinning
+});
+
+curr_track.addEventListener('pause', () => {
+  slideDisc(0);      // slide IN
+  stopDiscSpin();    // stop spinning
+});
+
+curr_track.addEventListener('ended', () => {
+  slideDisc(0);      // slide back when finished
+  stopDiscSpin();
+});
 
 // ---------------- GLOBAL HELPER: create a StandardMaterial that respects PNG alpha ----------------
 function makeStandardTextureMaterial(name, url, scene, opts = {}) {
