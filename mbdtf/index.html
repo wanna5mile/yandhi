@@ -304,28 +304,6 @@ caseMat.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
 caseBox.material = caseMat;
 caseBox.position.z = -0.2;
 
-
-// ================= INSERT =================
-const insert = BABYLON.MeshBuilder.CreateBox("insert", {
-  width: 0.5,
-  height: 1.2,
-  depth: 0.05,
-faceUV: [
-    new BABYLON.Vector4(1, 0, 0, 1), // front (normal)
-    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
-    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
-]
-}, scene);
-
-insert.position.set(1.8, 1.4, -0.2);
-
-// Apply texture to front and back
-const insertMat = makeStandardTextureMaterial("insertMat", "images/insertfix.png", scene);
-insert.material = insertMat;
-
 // ================= CASE COVER (INSERT STYLE) =================
 
 const caseCover = BABYLON.MeshBuilder.CreateBox("case-cover", {
@@ -350,7 +328,7 @@ caseCover.parent = caseBox;
 
 // ================= MATERIAL =================
 
-const coverMat = makeStandardTextureMaterial("coverMat", "../mbdtf/cover/mbdtf.png", scene);
+const coverMat = makeStandardTextureMaterial("coverMat", "../mbdtf/images/cover.png", scene);
 caseCover.material = coverMat;
 
     // ================= AUDIO ANALYSER =================
