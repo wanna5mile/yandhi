@@ -1,96 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>mbdtf Music Player</title>
-  <link rel="icon" href="images/disc.png" type="image/png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: #000;
-    }
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>mbdtf Music Player</title>
+    <link rel="icon" href="images/disc.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+      #renderCanvas { width: 100%; height: 100%; touch-action: none; }
+      .player-controls {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+        z-index: 10;
+      }
+      .player-controls button {
+        background: rgba(0, 0, 0, 0.6);
+        border: none;
+        color: white;
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        transition: all 0.2s ease;
+      }
+      .player-controls button:hover {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.15);
+      }
+      #playBtn { width: 90px; height: 90px; }
+      .player-controls button.active {
+        background: rgba(0, 170, 255, 0.6);
+        box-shadow: 0 0 15px rgba(0, 170, 255, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="renderCanvas"></canvas>
 
-    #renderCanvas {
-      width: 100%;
-      height: 100%;
-      touch-action: none;
-      display: block;
-    }
+    <div class="player-controls">
+<div class="player-controls">
+  <button class="random-track" id="shuffleBtn">
+    <i class="fas fa-random fa-2x"></i>
+  </button>
 
-    .player-controls {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 20px;
-      z-index: 10;
-    }
+  <button class="prev-track" id="prevBtn">
+    <i class="fa fa-step-backward fa-2x"></i>
+  </button>
 
-    .player-controls button {
-      background: rgba(0, 0, 0, 0.6);
-      border: none;
-      color: white;
-      border-radius: 50%;
-      width: 70px;
-      height: 70px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(10px);
-      transition: all 0.2s ease;
-    }
+  <button class="playpause-track" id="playBtn">
+    <i class="fa fa-play-circle fa-5x"></i>
+  </button>
 
-    .player-controls button:hover {
-      transform: scale(1.1);
-      background: rgba(255, 255, 255, 0.15);
-    }
+  <button class="next-track" id="nextBtn">
+    <i class="fa fa-step-forward fa-2x"></i>
+  </button>
 
-    #playBtn {
-      width: 90px;
-      height: 90px;
-    }
+  <button class="repeat-track" id="repeatBtn">
+    <i class="fas fa-redo fa-2x"></i>
+  </button>
+</div>
+    </div>
 
-    .player-controls button.active {
-      background: rgba(0, 170, 255, 0.6);
-      box-shadow: 0 0 15px rgba(0, 170, 255, 0.9);
-    }
-  </style>
-</head>
-<body>
-  <canvas id="renderCanvas"></canvas>
+<audio id="audio" preload="auto"></audio>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
 
-  <div class="player-controls">
-    <button class="random-track" id="shuffleBtn">
-      <i class="fas fa-random fa-2x"></i>
-    </button>
-
-    <button class="prev-track" id="prevBtn">
-      <i class="fa fa-step-backward fa-2x"></i>
-    </button>
-
-    <button class="playpause-track" id="playBtn">
-      <i class="fa fa-play-circle fa-5x"></i>
-    </button>
-
-    <button class="next-track" id="nextBtn">
-      <i class="fa fa-step-forward fa-2x"></i>
-    </button>
-
-    <button class="repeat-track" id="repeatBtn">
-      <i class="fas fa-redo fa-2x"></i>
-    </button>
-  </div>
-
-  <audio id="audio" preload="auto"></audio>
-
-  <!-- Babylon.js Core -->
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <!--EVENTS AND BUILD HERE DAWG -->
 <script>
 // ✅ SINGLE-FILE WORKING MUSIC PLAYER (RESTORED + MERGED + STABLE)
@@ -150,104 +131,41 @@ window.addEventListener("DOMContentLoaded", () => {
     const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 2, -3), scene);
     pointLight.intensity = 0.6;
 
-// ================= DISC =================
-const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
-  height: 0.05,
-  diameter: 3,
-  tessellation: 96
-}, scene);
+    // ================= DISC =================
+    const discBody = BABYLON.MeshBuilder.CreateCylinder("discBody", {
+      height: 0.05,
+      diameter: 3,
+      tessellation: 96
+    }, scene);
 
-discBody.position.x = 0;
-discBody.position.z = -0.2;
+    discBody.position.x = 0;
+    discBody.position.z = -0.2;
 
-const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
-  height: 0.06,
-  diameter: 0.1,
-  tessellation: 64
-}, scene);
+    const hole = BABYLON.MeshBuilder.CreateCylinder("hole", {
+      height: 0.06,
+      diameter: 0.1,
+      tessellation: 64
+    }, scene);
 
-hole.position.x = 0;
-hole.position.z = -0.2;
+    hole.position.x = 0;
+    hole.position.z = -0.2;
 
-const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
-const disc = discCSG.toMesh("disc", null, scene);
+    const discCSG = BABYLON.CSG.FromMesh(discBody).subtract(BABYLON.CSG.FromMesh(hole));
+    const disc = discCSG.toMesh("disc", null, scene);
 
-discBody.dispose();
-hole.dispose();
+    discBody.dispose();
+    hole.dispose();
 
-disc.rotation.x = Math.PI / 2;
+    disc.rotation.x = Math.PI / 2;
 
-// ================= MATERIAL =================
-const discMat = new BABYLON.PBRMaterial("discMat", scene);
-discMat.albedoTexture = new BABYLON.Texture("images/disc.png", scene);
-discMat.backFaceCulling = true;
-discMat.metallic = 0.4;
-discMat.roughness = 0.25;
-discMat.clearCoat.isEnabled = true;
-discMat.clearCoat.intensity = 0.8;
-disc.material = discMat;
-
-// ================= SLIDE ANIMATION FUNCTION =================
-function slideDisc(targetX) {
-  const animation = new BABYLON.Animation(
-    "discSlide",
-    "position.x",
-    60,
-    BABYLON.Animation.ANIMATIONTYPE_FLOAT,
-    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
-  );
-
-  const keys = [
-    { frame: 0, value: disc.position.x },
-    { frame: 30, value: targetX }
-  ];
-
-  animation.setKeys(keys);
-
-  const easing = new BABYLON.CubicEase();
-  easing.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
-  animation.setEasingFunction(easing);
-
-  disc.animations = [];
-  disc.animations.push(animation);
-
-  scene.beginAnimation(disc, 0, 30, false);
-}
-
-// ================= ROTATION CONTROL =================
-let discSpinObserver = null;
-
-function startDiscSpin() {
-  if (discSpinObserver) return;
-  discSpinObserver = scene.onBeforeRenderObservable.add(() => {
-    disc.rotation.z += 0.05;
-  });
-}
-
-function stopDiscSpin() {
-  if (discSpinObserver) {
-    scene.onBeforeRenderObservable.remove(discSpinObserver);
-    discSpinObserver = null;
-  }
-}
-
-// ================= AUDIO HOOKS =================
-// These sync perfectly with your music system
-
-audio.addEventListener('play', () => {
-  slideDisc(-2);     // slide OUT
-  startDiscSpin();   // start spinning
-});
-
-audio.addEventListener('pause', () => {
-  slideDisc(0);      // slide IN
-  stopDiscSpin();    // stop spinning
-});
-
-audio.addEventListener('ended', () => {
-  slideDisc(0);      // slide back when finished
-  stopDiscSpin();
-});
+    const discMat = new BABYLON.PBRMaterial("discMat", scene);
+    discMat.albedoTexture = new BABYLON.Texture("images/disc.png", scene);
+    discMat.backFaceCulling = true;
+    discMat.metallic = 0.4;
+    discMat.roughness = 0.25;
+    discMat.clearCoat.isEnabled = true;
+    discMat.clearCoat.intensity = 0.8;
+    disc.material = discMat;
 
 // ---------------- GLOBAL HELPER: create a StandardMaterial that respects PNG alpha ----------------
 function makeStandardTextureMaterial(name, url, scene, opts = {}) {
@@ -289,30 +207,15 @@ function makeStandardTextureMaterial(name, url, scene, opts = {}) {
 }
 
 
-// ================= CASE (PURE RED) =================
 
-const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
-  width: 4,
-  height: 4,
-  depth: 0.15
-}, scene);
-
-const caseMat = new BABYLON.StandardMaterial("caseMat", scene);
-caseMat.diffuseColor = new BABYLON.Color3(1, 0.18, 0.3); // pure red
-caseMat.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-
-caseBox.material = caseMat;
-caseBox.position.z = -0.2;
-
-// ================= CASE COVER (INSERT STYLE) =================
-
-const caseCover = BABYLON.MeshBuilder.CreateBox("case-cover", {
-  width: 4,
-  height: 4,
+// ================= EIGHTY =================
+const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
+  width: 0.8,
+  height: 0.8,
   depth: 0.05,
   faceUV: [
     new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
-    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
     new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
     new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
     new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
@@ -320,16 +223,88 @@ const caseCover = BABYLON.MeshBuilder.CreateBox("case-cover", {
   ]
 }, scene);
 
+eighty.position.set(-1.5, 1.5, -0.2);
 
-// Position it flush on the front of the case
-caseCover.position.set(0, 0, caseBox.position.z + 0.3);
-caseCover.parent = caseBox;
+// Apply texture to front and back
+const eightyMat = makeStandardTextureMaterial("eightyMat", "images/80fix.png", scene);
+eighty.material = eightyMat;
 
 
-// ================= MATERIAL =================
+// ================= INSERT =================
+const insert = BABYLON.MeshBuilder.CreateBox("insert", {
+  width: 0.5,
+  height: 1.2,
+  depth: 0.05,
+faceUV: [
+    new BABYLON.Vector4(1, 0, 0, 1), // front (normal)
+    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+]
+}, scene);
 
-const coverMat = makeStandardTextureMaterial("coverMat", "../mbdtf/images/cover.png", scene);
-caseCover.material = coverMat;
+insert.position.set(1.8, 1.4, -0.2);
+
+// Apply texture to front and back
+const insertMat = makeStandardTextureMaterial("insertMat", "images/insertfix.png", scene);
+insert.material = insertMat;
+
+// ================= MINIDISC =================
+const minidiscSize = 0.8;   // width & height
+const minidiscDepth = 0.02; // distance between front and back
+
+// Function to create a single minidisc face
+function createMinidiscFace(name, textureURL, scene) {
+    const plane = BABYLON.MeshBuilder.CreatePlane(name, {
+        width: minidiscSize,
+        height: minidiscSize
+    }, scene);
+
+    const mat = makeStandardTextureMaterial(`${name}Mat`, textureURL, scene);
+    plane.material = mat;
+
+    return plane;
+}
+
+// Create front and back as separate planes
+const frontMinidisc = createMinidiscFace("frontMinidisc", "images/minidiscfix.png", scene);
+frontMinidisc.position.set(0, -1.2, -0.25); // position inside cover
+
+const backMinidisc = createMinidiscFace("backMinidisc", "images/minidiscfix.png", scene);
+backMinidisc.position.set(0, -1.2, -0.12 + minidiscDepth); // slightly behind front
+backMinidisc.rotation.y = Math.PI; // flip to face opposite direction
+
+// ================= CASE + TAPE =================
+const tape = BABYLON.MeshBuilder.CreateBox("tape", {
+  width: 1.4,
+  height: 4 / 3,
+  depth: 0.2
+}, scene);
+
+tape.position.set(-1.4, 0, -0.2);
+
+const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
+  width: 4,
+  height: 4,
+  depth: 0.15
+}, scene);
+
+// Glass material for case
+const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
+glassMat.alpha = 0.25;
+glassMat.indexOfRefraction = 1.5;
+glassMat.roughness = 0.05;
+caseBox.material = glassMat;
+caseBox.position.z = -0.2;
+
+
+// ================= TAPE MATERIAL =================
+const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
+tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
+tapeMat.backFaceCulling = true;
+tape.material = tapeMat;
 
     // ================= AUDIO ANALYSER =================
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -419,6 +394,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 });
 </script>
+
 <script src="mbdtf-player.js" defer></script>
   </body>
 </html>
