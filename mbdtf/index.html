@@ -207,83 +207,7 @@ function makeStandardTextureMaterial(name, url, scene, opts = {}) {
 }
 
 
-
-// ================= EIGHTY =================
-const eighty = BABYLON.MeshBuilder.CreateBox("eighty", {
-  width: 0.8,
-  height: 0.8,
-  depth: 0.05,
-  faceUV: [
-    new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
-    new BABYLON.Vector4(0, 0, 1, 1), // back (flipped horizontally)
-    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
-  ]
-}, scene);
-
-eighty.position.set(-1.5, 1.5, -0.2);
-
-// Apply texture to front and back
-const eightyMat = makeStandardTextureMaterial("eightyMat", "images/80fix.png", scene);
-eighty.material = eightyMat;
-
-
-// ================= INSERT =================
-const insert = BABYLON.MeshBuilder.CreateBox("insert", {
-  width: 0.5,
-  height: 1.2,
-  depth: 0.05,
-faceUV: [
-    new BABYLON.Vector4(1, 0, 0, 1), // front (normal)
-    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
-    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
-    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
-]
-}, scene);
-
-insert.position.set(1.8, 1.4, -0.2);
-
-// Apply texture to front and back
-const insertMat = makeStandardTextureMaterial("insertMat", "images/insertfix.png", scene);
-insert.material = insertMat;
-
-// ================= MINIDISC =================
-const minidiscSize = 0.8;   // width & height
-const minidiscDepth = 0.02; // distance between front and back
-
-// Function to create a single minidisc face
-function createMinidiscFace(name, textureURL, scene) {
-    const plane = BABYLON.MeshBuilder.CreatePlane(name, {
-        width: minidiscSize,
-        height: minidiscSize
-    }, scene);
-
-    const mat = makeStandardTextureMaterial(`${name}Mat`, textureURL, scene);
-    plane.material = mat;
-
-    return plane;
-}
-
-// Create front and back as separate planes
-const frontMinidisc = createMinidiscFace("frontMinidisc", "images/minidiscfix.png", scene);
-frontMinidisc.position.set(0, -1.2, -0.25); // position inside cover
-
-const backMinidisc = createMinidiscFace("backMinidisc", "images/minidiscfix.png", scene);
-backMinidisc.position.set(0, -1.2, -0.12 + minidiscDepth); // slightly behind front
-backMinidisc.rotation.y = Math.PI; // flip to face opposite direction
-
-// ================= CASE + TAPE =================
-const tape = BABYLON.MeshBuilder.CreateBox("tape", {
-  width: 1.4,
-  height: 4 / 3,
-  depth: 0.2
-}, scene);
-
-tape.position.set(-1.4, 0, -0.2);
+// ================= CASE (PURE RED) =================
 
 const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
   width: 4,
@@ -291,20 +215,40 @@ const caseBox = BABYLON.MeshBuilder.CreateBox("case", {
   depth: 0.15
 }, scene);
 
-// Glass material for case
-const glassMat = new BABYLON.PBRMaterial("glassMat", scene);
-glassMat.alpha = 0.25;
-glassMat.indexOfRefraction = 1.5;
-glassMat.roughness = 0.05;
-caseBox.material = glassMat;
+const caseMat = new BABYLON.StandardMaterial("caseMat", scene);
+caseMat.diffuseColor = new BABYLON.Color3(1, 0.18, 0.3); // pure red
+caseMat.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+
+caseBox.material = caseMat;
 caseBox.position.z = -0.2;
 
 
-// ================= TAPE MATERIAL =================
-const tapeMat = new BABYLON.StandardMaterial("tapeMat", scene);
-tapeMat.diffuseColor = new BABYLON.Color3(0.75, 0.6, 0.9);
-tapeMat.backFaceCulling = true;
-tape.material = tapeMat;
+// ================= CASE COVER (INSERT STYLE) =================
+
+const caseCover = BABYLON.MeshBuilder.CreateBox("case-cover", {
+  width: 4,
+  height: 4,
+  depth: 0.05,
+  faceUV: [
+    new BABYLON.Vector4(1, 1, 0, 0), // front (normal)
+    new BABYLON.Vector4(1, 1, 0, 0), // back (flipped horizontally)
+    new BABYLON.Vector4(0, 0, 0, 0), // right (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // left (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0), // top (transparent)
+    new BABYLON.Vector4(0, 0, 0, 0)  // bottom (transparent)
+  ]
+}, scene);
+
+
+// Position it flush on the front of the case
+caseCover.position.set(0, 0, caseBox.position.z + 0.3);
+caseCover.parent = caseBox;
+
+
+// ================= MATERIAL =================
+
+const coverMat = makeStandardTextureMaterial("coverMat", "../mbdtf/cover/mbdtf.png", scene);
+caseCover.material = coverMat;
 
     // ================= AUDIO ANALYSER =================
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
